@@ -1,3 +1,5 @@
+use hiko::config;
+
 fn main() {
-    println!("Hello, world!");
+    println!("{}", config::test());
 }
