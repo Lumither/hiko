@@ -1,5 +1,3 @@
-use hiko::config;
+use hiko::{config, task::Task};
 
-fn main() {
-    println!("{}", config::test());
-}
+fn main() {}
