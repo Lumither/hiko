@@ -1,3 +1,5 @@
+use reqwest::Request;
+
 pub mod test;
 
 #[derive(Debug)]
@@ -48,13 +50,25 @@ impl Task {
     pub async fn trace(&self) -> Result<(), String> {
         match &self.task_type {
             TaskType::CheckReturnCode(expected) => match reqwest::get(&self.task_url).await {
-                Ok(responce) if responce.status().as_u16().eq(expected) => Ok(()),
-                Ok(responce) => Err(String::from("Status Code Mismatch")),
+                Ok(response) if response.status().as_u16().eq(expected) => Ok(()),
+                Ok(_) => Err(String::from("Status Code Mismatch")),
                 Err(err) => Err(err.to_string()),
             },
-            TaskType::MatchUrlContent(expected) => {
-                todo!("match url content");
-            }
+            TaskType::MatchUrlContent(expected) => match reqwest::get(&self.task_url).await {
+                Ok(response) => {
+                    let content = response.text().await;
+                    if let Ok(content) = content {
+                        if content.contains(expected) {
+                            Ok(())
+                        } else {
+                            Err(String::from("Content Mismatch"))
+                        }
+                    } else {
+                        Err(content.unwrap_err().to_string())
+                    }
+                }
+                Err(err) => Err(err.to_string()),
+            },
         }
     }
 }
