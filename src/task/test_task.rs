@@ -1,10 +1,7 @@
-use crate::task::Task;
-
-#[cfg(test)]
-use crate::task::{TaskStatus, TaskType};
-
 #[tokio::test]
 async fn test_update_normal() {
+    use crate::task::{Task, TaskStatus, TaskType};
+
     let mut task = Task::new(
         String::from("Task 1"),
         String::from("https://example.com"),
@@ -20,6 +17,8 @@ async fn test_update_normal() {
 #[tokio::test]
 #[should_panic]
 async fn test_expired_tls() {
+    use crate::task::{Task, TaskStatus, TaskType};
+
     let mut task = Task::new(
         String::from("Task 2"),
         String::from("https://expired.badssl.com/"),
@@ -37,6 +36,8 @@ async fn test_expired_tls() {
 
 #[tokio::test]
 async fn test_check_return_code() {
+    use crate::task::{Task, TaskType};
+
     let task = Task::new(
         String::from("Task 3"),
         String::from("https://example.com"),
@@ -51,6 +52,8 @@ async fn test_check_return_code() {
 
 #[tokio::test]
 async fn test_match_url_content_success() {
+    use crate::task::{Task, TaskType};
+
     let task = Task::new(
         String::from("Task 4"),
         String::from("https://example.com"),

@@ -11,9 +11,9 @@ This is a tool designed to monitor the availability of other services running on
 
 - HTTP/S HEAD Check: It sends a HEAD request to the specified URL (supports redirection) and checks the HTTP response code. If the response code is 200, the service is considered to be running normally. Any other response code indicates a possible issue with the service.
 
-## Features
+## Features (planed, under development)
 
-The tool offers the following features:
+The tool offers the followimentng features:
 
 - Configurable Monitoring Objects: You can configure the services to monitor by specifying their name, URL, and the string to search for or the expected HTTP response code. You can add, remove, or modify monitoring objects as needed. The monitoring objects will be displayed in alphabetical order based on their names.
 
