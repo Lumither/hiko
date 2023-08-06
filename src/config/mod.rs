@@ -9,7 +9,7 @@ pub struct Config {
     pub timeout: u64,
 }
 
-pub fn load(file_path: &str) -> Result<Config, String> {
+pub fn from(file_path: &str) -> Result<Config, String> {
     // Read the contents of the file
     let file_content =
         fs::read_to_string(file_path).map_err(|err| format!("Failed to read file: {}", err))?;

@@ -1,8 +1,8 @@
 #[test]
-fn test_load_valid() {
+fn test_from_valid() {
     use std::fs;
 
-    use crate::config::load;
+    use crate::config::from;
 
     let toml_content = r#"
             [database]
@@ -16,17 +16,17 @@ fn test_load_valid() {
 
     fs::write(&temp_file, toml_content).expect("Failed to write temporary file");
 
-    let config = load(file_path).expect("Failed to read configuration");
+    let config = from(file_path).expect("Failed to read configuration");
 
     assert_eq!(config.db_path, "/path/to/database.db");
     assert_eq!(config.timeout, 5000);
 }
 
 #[test]
-fn test_load_missing_db_path() {
+fn test_from_missing_db_path() {
     use std::fs;
 
-    use crate::config::load;
+    use crate::config::from;
 
     let toml_content = r#"
             [database]
@@ -39,7 +39,7 @@ fn test_load_missing_db_path() {
 
     fs::write(&temp_file, toml_content).expect("Failed to write temporary file");
 
-    let result = load(file_path);
+    let result = from(file_path);
 
     assert!(result.is_err());
     assert_eq!(
@@ -49,10 +49,10 @@ fn test_load_missing_db_path() {
 }
 
 #[test]
-fn test_load_missing_timeout() {
+fn test_from_missing_timeout() {
     use std::fs;
 
-    use crate::config::load;
+    use crate::config::from;
 
     let toml_content = r#"
             [database]
@@ -65,7 +65,7 @@ fn test_load_missing_timeout() {
 
     fs::write(&temp_file, toml_content).expect("Failed to write temporary file");
 
-    let result = load(file_path);
+    let result = from(file_path);
 
     assert!(result.is_err());
     assert_eq!(
