@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "zu9IADyPOeNBdztykreM20fsyahOJUaBDvHnkvPiRmrsCN/HPa4bl2w8kTZCB8rl+v8OD3t8I7xsp1HkZ4Gujw==",
+  "success": true,
+  "projectFilePath": "/home/lumither/Dev/hiko/webUI/webUI.csproj",
+  "expectedPackageFiles": [
+    "/home/lumither/.nuget/packages/microsoft.aspnetcore.app.ref/7.0.9/microsoft.aspnetcore.app.ref.7.0.9.nupkg.sha512"
+  ],
+  "logs": []
+}

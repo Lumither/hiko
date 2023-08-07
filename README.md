@@ -1,5 +1,5 @@
 # Hiko
-A simple service watchdog written in Rust
+A simple service watchdog written in Rust(backend) and ASP.NET(frontend)
 
 ## Introduction
 
