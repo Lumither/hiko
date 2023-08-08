@@ -1,3 +1,5 @@
+use std::fmt;
+
 pub mod task_list;
 mod test_task;
 mod test_task_list;
@@ -8,7 +10,7 @@ pub struct Task {
     task_url: String,
     task_description: String,
     task_type: TaskType,
-    pub task_status: TaskStatus,
+    task_status: TaskStatus,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -40,6 +42,22 @@ impl Task {
         }
     }
 
+    pub fn get_task_name(&self) -> String {
+        self.task_name.clone()
+    }
+
+    pub fn get_task_url(&self) -> String {
+        self.task_url.clone()
+    }
+
+    pub fn get_task_description(&self) -> String {
+        self.task_description.clone()
+    }
+
+    pub fn get_task_type(&self) -> String {
+        self.task_type.to_string()
+    }
+
     pub async fn update(&mut self) {
         self.task_status = match self.trace().await {
             Ok(_) => TaskStatus::Normal,
@@ -69,6 +87,15 @@ impl Task {
                 }
                 Err(err) => Err(err.to_string()),
             },
+        }
+    }
+}
+
+impl fmt::Display for TaskType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            TaskType::CheckReturnCode(expected) => write!(f, "CheckReturnCode({})", expected),
+            TaskType::MatchUrlContent(expected) => write!(f, "MatchUrlContent({})", expected),
         }
     }
 }
