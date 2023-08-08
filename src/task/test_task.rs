@@ -65,3 +65,28 @@ async fn test_match_url_content_success() {
 
     assert_eq!(result, Ok(()));
 }
+
+#[test]
+fn test_task_type_to_string() {
+    use super::TaskType;
+
+    let tmp = TaskType::CheckReturnCode(200);
+    assert_eq!(tmp.to_string(), "{\"CheckReturnCode\":200}");
+}
+
+#[test]
+fn test_task_type_serialize_and_deserialize() {
+    use super::TaskType;
+
+    let tmp = TaskType::CheckReturnCode(200);
+    assert_eq!(
+        serde_json::from_str::<TaskType>("{\"CheckReturnCode\":200}").unwrap(),
+        tmp
+    );
+
+    let tmp = TaskType::MatchUrlContent("content".to_string());
+    assert_eq!(
+        serde_json::from_str::<TaskType>("{\"MatchUrlContent\":\"content\"}").unwrap(),
+        tmp
+    );
+}

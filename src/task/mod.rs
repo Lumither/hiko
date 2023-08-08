@@ -1,5 +1,11 @@
 use std::fmt;
 
+use rusqlite::{
+    types::{FromSql, ToSqlOutput},
+    ToSql,
+};
+use serde::{Deserialize, Serialize};
+
 pub mod task_list;
 mod test_task;
 mod test_task_list;
@@ -13,7 +19,7 @@ pub struct Task {
     task_status: TaskStatus,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub enum TaskType {
     CheckReturnCode(u16),
     MatchUrlContent(String),
@@ -93,9 +99,18 @@ impl Task {
 
 impl fmt::Display for TaskType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            TaskType::CheckReturnCode(expected) => write!(f, "CheckReturnCode({})", expected),
-            TaskType::MatchUrlContent(expected) => write!(f, "MatchUrlContent({})", expected),
-        }
+        write!(f, "{}", serde_json::to_string(&self).unwrap())
+    }
+}
+
+impl FromSql for TaskType {
+    fn column_result(value: rusqlite::types::ValueRef<'_>) -> rusqlite::types::FromSqlResult<Self> {
+        Ok(serde_json::from_str(value.as_str()?).unwrap())
+    }
+}
+
+impl ToSql for TaskType {
+    fn to_sql(&self) -> rusqlite::Result<rusqlite::types::ToSqlOutput<'_>> {
+        Ok(ToSqlOutput::from(self.to_string()))
     }
 }
