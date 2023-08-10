@@ -16,7 +16,9 @@ pub struct Task {
     task_url: String,
     task_description: String,
     task_type: TaskType,
+    pub task_id: uuid::Uuid,
     task_status: TaskStatus,
+    failure_count: u16,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
@@ -44,7 +46,9 @@ impl Task {
             task_url,
             task_description,
             task_type,
+            task_id: uuid::Uuid::new_v4(),
             task_status: TaskStatus::UnTested,
+            failure_count: 0,
         }
     }
 
@@ -67,11 +71,15 @@ impl Task {
     pub async fn update(&mut self) {
         self.task_status = match self.trace().await {
             Ok(_) => TaskStatus::Normal,
-            Err(err_msg) => TaskStatus::ERR(err_msg),
+            Err(err_msg) => {
+                // log
+                self.failure_count += 1;
+                TaskStatus::ERR(err_msg)
+            }
         };
     }
 
-    pub async fn trace(&self) -> Result<(), String> {
+    async fn trace(&self) -> Result<(), String> {
         match &self.task_type {
             TaskType::CheckReturnCode(expected) => match reqwest::get(&self.task_url).await {
                 Ok(response) if response.status().as_u16().eq(expected) => Ok(()),

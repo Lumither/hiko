@@ -1,5 +1,6 @@
 # Hiko
-A simple service watchdog written in Rust(backend) and ASP.NET(frontend)
+
+A simple service watchdog written in Rust(backend) and ASP.NET(undicided, may be React)
 
 ## Introduction
 
@@ -28,13 +29,12 @@ The tool offers the followimentng features:
 1. Clone this repository to your server.
 2. Edit the configuration file to specify the monitoring objects and email alert settings. You can refer to the example configuration file provided and make modifications as needed.
 3. Run the startup script for the tool:
-    ```shell
-    $ ./start.sh
-    ```
+
+   ```shell
+   $ ./start.sh
+   ```
 
 4. The tool will automatically start monitoring based on the configured settings and send email alerts when necessary.
-
-
 
 ## License
 

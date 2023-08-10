@@ -1,5 +1,7 @@
 use rusqlite;
 
+use crate::task::TaskType;
+
 use super::Task;
 
 #[derive(Debug)]
@@ -19,20 +21,24 @@ impl TaskList {
         }
     }
 
-    pub fn load_tasks(&self) -> rusqlite::Result<()> {
-        let buff = self.db_connection.prepare("SELECT * FROM task_list");
-        if let Ok(mut buff) = buff {
-            let task_list = buff.query_map([], |row| {
-                Ok(Task::new(
-                    row.get(0)?,
-                    row.get(1)?,
-                    row.get(2)?,
-                    row.get(3)?,
-                ))
-            })?;
+    pub fn execute(&self) -> rusqlite::Result<()> {
+        let stmt = self
+            .db_connection
+            .prepare("SELECT task_id, task_type FROM task_list");
+        if let Ok(mut stmt) = stmt {
+            let task_list = stmt
+                .query_map([], |row| {
+                    Ok(Box::new((
+                        uuid::Uuid::parse_str(row.get::<_, String>(0)?.as_str()).unwrap(),
+                        serde_json::from_str::<TaskType>(row.get::<_, String>(1)?.as_str())
+                            .unwrap(),
+                    )))
+                })?
+                .collect::<Result<Vec<_>, _>>()?;
+            todo!("check list");
             Ok(())
         } else {
-            Err(buff.unwrap_err())
+            Err(stmt.unwrap_err())
         }
     }
 }
