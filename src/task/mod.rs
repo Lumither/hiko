@@ -12,13 +12,13 @@ mod test_task_list;
 
 #[derive(Debug)]
 pub struct Task {
-    task_name: String,
-    task_url: String,
-    task_description: String,
-    task_type: TaskType,
+    pub task_name: String,
     pub task_id: uuid::Uuid,
-    task_status: TaskStatus,
-    failure_count: u16,
+    pub task_url: String,
+    pub task_description: String,
+    pub task_type: TaskType,
+    pub task_status: TaskStatus,
+    pub failure_count: u16,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
@@ -27,7 +27,7 @@ pub enum TaskType {
     MatchUrlContent(String),
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub enum TaskStatus {
     UnTested,
     Normal,
@@ -50,22 +50,6 @@ impl Task {
             task_status: TaskStatus::UnTested,
             failure_count: 0,
         }
-    }
-
-    pub fn get_task_name(&self) -> String {
-        self.task_name.clone()
-    }
-
-    pub fn get_task_url(&self) -> String {
-        self.task_url.clone()
-    }
-
-    pub fn get_task_description(&self) -> String {
-        self.task_description.clone()
-    }
-
-    pub fn get_task_type(&self) -> String {
-        self.task_type.to_string()
     }
 
     pub async fn update(&mut self) {
