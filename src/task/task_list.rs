@@ -1,6 +1,6 @@
 use rusqlite;
 use serde_json::from_str;
-use tokio::{runtime::Runtime, try_join};
+use tokio::runtime::Runtime;
 
 use crate::task::{TaskStatus, TaskType};
 
@@ -47,9 +47,15 @@ impl TaskList {
                 .collect::<Result<Vec<_>, _>>()?;
 
             let mut async_runtime = Runtime::new().unwrap();
-            let task_funtures = tasks.into_iter().map(|mut task| tokio::spawn(task.trace()));
-            async_runtime.block_on(async {});
-            todo!("asyc runtime");
+            let task_futures = tasks
+                .into_iter()
+                .map(|mut task| tokio::spawn(async move { task.update().await }));
+            async_runtime.block_on(async {
+                futures::future::join_all(task_futures).await;
+            });
+
+            // TODO: add log
+
             Ok(())
         } else {
             Err(stmt.unwrap_err())
