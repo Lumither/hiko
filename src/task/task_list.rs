@@ -46,15 +46,21 @@ impl TaskList {
                 })?
                 .collect::<Result<Vec<_>, _>>()?;
 
-            let mut async_runtime = Runtime::new().unwrap();
-            let task_futures = tasks
-                .into_iter()
-                .map(|mut task| tokio::spawn(async move { task.update().await }));
+            let async_runtime = Runtime::new().unwrap();
+            let task_futures = tasks.into_iter().map(|mut task| {
+                tokio::spawn(async move {
+                    task.update().await;
+                    // let update_stmt = self.db_connection.prepare("UPDATE task_list SET task_status = ?, failure_count = ? WHERE task_id = ?");
+                    // if let Ok(mut update_stmt) = update_stmt {
+
+                    // }
+                })
+            });
             async_runtime.block_on(async {
                 futures::future::join_all(task_futures).await;
             });
 
-            // TODO: add log
+            // todos: log and insert back
 
             Ok(())
         } else {
