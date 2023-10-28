@@ -1,4 +1,5 @@
 use std::fs;
+
 use toml::Value;
 
 mod test_config;
@@ -19,14 +20,14 @@ pub fn from(file_path: &str) -> Result<Config, String> {
         .map_err(|err| format!("Failed to parse TOML: {}", err))?;
 
     let db_path = toml_value
-        .get("database")
+        .get("Database")
         .and_then(|db| db.get("db_path"))
         .and_then(|path| path.as_str())
         .map(|path| path.to_owned())
         .ok_or_else(|| String::from("Missing 'db_path' in configuration file"))?;
 
     let timeout = toml_value
-        .get("task")
+        .get("Task")
         .and_then(|task| task.get("timeout"))
         .and_then(|val| val.as_integer())
         .map(|val| val as u64)

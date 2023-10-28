@@ -5,10 +5,10 @@ fn test_from_valid() {
     use crate::config::from;
 
     let toml_content = r#"
-            [database]
-            db_path = "/path/to/database.db"
+            [Database]
+            db_path = "/path/to/Database.Db"
 
-            [task]
+            [Task]
             timeout = 5000
         "#;
     let temp_file = tempfile::NamedTempFile::new().expect("Failed to create temporary file");
@@ -18,7 +18,7 @@ fn test_from_valid() {
 
     let config = from(file_path).expect("Failed to read configuration");
 
-    assert_eq!(config.db_path, "/path/to/database.db");
+    assert_eq!(config.db_path, "/path/to/Database.Db");
     assert_eq!(config.timeout, 5000);
 }
 
@@ -29,9 +29,9 @@ fn test_from_missing_db_path() {
     use crate::config::from;
 
     let toml_content = r#"
-            [database]
+            [Database]
             
-            [task]
+            [Task]
             timeout = 5000
         "#;
     let temp_file = tempfile::NamedTempFile::new().expect("Failed to create temporary file");
@@ -55,10 +55,10 @@ fn test_from_missing_timeout() {
     use crate::config::from;
 
     let toml_content = r#"
-            [database]
-            db_path = "/path/to/database.db"
+            [Database]
+            db_path = "/path/to/Database.Db"
 
-            [task]
+            [Task]
         "#;
     let temp_file = tempfile::NamedTempFile::new().expect("Failed to create temporary file");
     let file_path = temp_file.path().to_str().unwrap();

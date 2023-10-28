@@ -15,3 +15,7 @@ Cargo.lock
 
 # RustRover config
 .idea
+
+# local debug data
+config.toml
+data.db

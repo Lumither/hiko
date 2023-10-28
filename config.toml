@@ -1,0 +1,5 @@
+[Database]
+db_path = "data.Db"
+
+[Task]
+timeout = 5000

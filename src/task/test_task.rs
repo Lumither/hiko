@@ -17,8 +17,6 @@ async fn test_update_normal() {
 #[tokio::test]
 #[should_panic]
 async fn test_expired_tls() {
-    use crate::task::{Task, TaskStatus, TaskType};
-
     let mut task = Task::new(
         String::from("Task 2"),
         String::from("https://expired.badssl.com/"),
