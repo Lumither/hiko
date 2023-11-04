@@ -65,7 +65,6 @@ impl Task {
     }
 
     async fn trace(&self) -> Result<(), String> {
-        // todo: refactor with trait, add extension support
         match &self.task_type {
             TaskType::CheckReturnCode(expected) => match reqwest::get(&self.task_url).await {
                 Ok(response) if response.status().as_u16().eq(expected) => Ok(()),

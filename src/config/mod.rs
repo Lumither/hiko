@@ -7,31 +7,96 @@ mod test_config;
 #[derive(Debug)]
 pub struct Config {
     pub db_path: String,
+    pub task: Option<Task>,
+    pub mail: Option<Mail>,
+}
+
+#[derive(Debug)]
+pub struct Mail {
+    pub address: String,
+    pub password: String,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct Task {
     pub timeout: u64,
 }
 
 pub fn from(file_path: &str) -> Result<Config, String> {
-    // Read the contents of the file
-    let file_content =
-        fs::read_to_string(file_path).map_err(|err| format!("Failed to read file: {}", err))?;
+    let file = read_toml(file_path)?;
 
-    let toml_value = file_content
-        .parse::<Value>()
-        .map_err(|err| format!("Failed to parse TOML: {}", err))?;
+    let database = match file.get("Database") {
+        None => return Err("`Database` not found in config file".to_string()),
+        Some(database) => database,
+    };
+    let db_path = match database.get("db_path") {
+        None => return Err("missing filed `Database::db_path`".to_string()),
+        Some(db_path) => db_path.as_str().to_owned().unwrap().to_string(),
+    };
 
-    let db_path = toml_value
-        .get("Database")
-        .and_then(|db| db.get("db_path"))
-        .and_then(|path| path.as_str())
-        .map(|path| path.to_owned())
-        .ok_or_else(|| String::from("Missing 'db_path' in configuration file"))?;
+    let task = match file.get("Task") {
+        Some(task) => {
+            let timeout = match task.get("timeout") {
+                Some(timeout) => {
+                    if let Ok(timeout) = timeout.to_string().parse::<u64>() {
+                        timeout
+                    } else {
+                        return Err("failed to parse `Task::timeout`".to_string());
+                    }
+                }
+                None => {
+                    return Err("missing field `Task::timeout` (type u64 required)".to_string());
+                }
+            };
+            Some(Task { timeout })
+        }
+        None => None,
+    };
 
-    let timeout = toml_value
-        .get("Task")
-        .and_then(|task| task.get("timeout"))
-        .and_then(|val| val.as_integer())
-        .map(|val| val as u64)
-        .ok_or_else(|| String::from("Missing 'timeout' in configuration file"))?;
+    let mail = match file.get("Mail") {
+        Some(mail) => {
+            let address = match mail.get("address") {
+                Some(address) => address.to_string(),
+                None => {
+                    return Err("missing field `Mail::address`".to_string());
+                }
+            };
+            let password = match mail.get("password") {
+                Some(password) => password.to_string(),
+                None => {
+                    return Err("missing field `Mail::password`".to_string());
+                }
+            };
+            Some(Mail { address, password })
+        }
+        None => {
+            log::warn!("mail not config");
+            None
+        }
+    };
 
-    Ok(Config { db_path, timeout })
+    Ok(Config {
+        db_path,
+        task,
+        mail,
+    })
+}
+
+fn read_toml(file_path: &str) -> Result<Value, String> {
+    if let Ok(file_contents) = fs::read_to_string(file_path) {
+        if let Ok(toml_value) = toml::from_str(&file_contents) {
+            Ok(toml_value)
+        } else {
+            Err("failed to parse config file".to_string())
+        }
+    } else {
+        Err("config.toml not found".to_string())
+    }
+}
+
+#[cfg(test)]
+#[test]
+fn read_config() {
+    let cfg = from("./config.toml");
+    print!("{:?}", cfg.unwrap());
 }

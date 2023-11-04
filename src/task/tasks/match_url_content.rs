@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::task::Task;
+use crate::task::{Description, Task};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MatchUrlContent {
@@ -12,12 +12,6 @@ pub struct MatchUrlContent {
 
     url: String,
     content: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub struct Description {
-    name: String,
-    text: String,
 }
 
 #[async_trait]
@@ -74,20 +68,39 @@ fn test_serialization() {
 #[cfg(test)]
 #[tokio::test]
 async fn test_matching() {
-    // assert_eq!(
-    //     MatchUrlContent {
-    //         id: Uuid::new_v4(),
-    //         description: Description {
-    //             name: "name".to_string(),
-    //             text: "description".to_string(),
-    //         },
-    //         fails: 0,
-    //         url: "".to_string(),
-    //         content: "".to_string(),
-    //     }
-    //     .exec(),
-    //     Ok(())
-    // );
+    assert_eq!(
+        MatchUrlContent {
+            id: Uuid::new_v4(),
+            description: Description {
+                name: "name".to_string(),
+                text: "description".to_string(),
+            },
+            fails: 0,
+            url: "https://example.com".to_string(),
+            content: "example".to_string(),
+        }
+        .exec()
+        .await,
+        Ok(())
+    );
+}
 
-    // working on
+#[cfg(test)]
+#[tokio::test]
+async fn test_not_matching() {
+    assert_ne!(
+        MatchUrlContent {
+            id: Uuid::new_v4(),
+            description: Description {
+                name: "name".to_string(),
+                text: "description".to_string(),
+            },
+            fails: 0,
+            url: "https://example.com".to_string(),
+            content: "lol".to_string(),
+        }
+        .exec()
+        .await,
+        Ok(())
+    );
 }

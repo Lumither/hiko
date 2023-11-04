@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::task::Task;
+use crate::task::{Description, Task};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CheckReturnCode {
@@ -12,12 +12,6 @@ pub struct CheckReturnCode {
 
     url: String,
     code: u16,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Description {
-    name: String,
-    text: String,
 }
 
 #[async_trait]
@@ -42,4 +36,24 @@ impl Task for CheckReturnCode {
     fn fail_count(&self) -> u32 {
         self.fails
     }
+}
+
+#[cfg(test)]
+#[tokio::test]
+async fn test_matching() {
+    assert_eq!(
+        CheckReturnCode {
+            id: Uuid::new_v4(),
+            description: Description {
+                name: "name".to_string(),
+                text: "description".to_string(),
+            },
+            fails: 0,
+            url: "https://example.com/a".to_string(),
+            code: 404,
+        }
+        .exec()
+        .await,
+        Ok(())
+    );
 }

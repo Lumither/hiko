@@ -1,7 +1,7 @@
 pub mod config;
+mod database;
+pub mod log;
 pub mod plugin;
 pub mod task;
-
-mod database;
 
 fn run() {}

@@ -1,3 +1,5 @@
+use crate::config::Task;
+
 #[test]
 fn test_from_valid() {
     use std::fs;
@@ -19,7 +21,7 @@ fn test_from_valid() {
     let config = from(file_path).expect("Failed to read configuration");
 
     assert_eq!(config.db_path, "/path/to/Database.Db");
-    assert_eq!(config.timeout, 5000);
+    assert_eq!(config.task, Some(Task { timeout: 5000 }));
 }
 
 #[test]
@@ -42,10 +44,7 @@ fn test_from_missing_db_path() {
     let result = from(file_path);
 
     assert!(result.is_err());
-    assert_eq!(
-        result.unwrap_err(),
-        "Missing 'db_path' in configuration file"
-    );
+    assert_eq!(result.unwrap_err(), "missing filed `Database::db_path`");
 }
 
 #[test]
@@ -70,6 +69,6 @@ fn test_from_missing_timeout() {
     assert!(result.is_err());
     assert_eq!(
         result.unwrap_err(),
-        "Missing 'timeout' in configuration file"
+        "missing field `Task::timeout` (type u64 required)"
     );
 }

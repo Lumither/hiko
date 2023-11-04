@@ -1,5 +1,9 @@
 [Database]
-db_path = "data.Db"
+db_path = "data.db"
 
 [Task]
 timeout = 5000
+
+[Mail]
+address = ""
+password = ""
