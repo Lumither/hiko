@@ -17,6 +17,7 @@ pub struct MatchUrlContent {
 #[async_trait]
 impl Task for MatchUrlContent {
     async fn exec(&mut self) -> Result<(), String> {
+        // todo: timeout
         match reqwest::get(&self.url).await {
             Ok(response) => {
                 let res_content = response.text().await;
@@ -25,7 +26,7 @@ impl Task for MatchUrlContent {
                         Ok(())
                     } else {
                         Err(format!(
-                            "Content Mismatch: \n\texpected \"{}\", found \"{}\"",
+                            "Content Mismatch: \n\texpected \"{}\", found \"{}\"", // todo: modify style
                             &self.content, res_content
                         ))
                     }

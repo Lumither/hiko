@@ -1,19 +1,32 @@
-use std::io::Write;
+use std::fs::OpenOptions;
+use std::io::{stdout, Write};
 
 use chrono::Local;
-use env_logger::Builder;
+use fern::Dispatch;
+use log::LevelFilter;
 pub use log::{debug, error, info, trace, warn};
 
 pub fn init() {
-    Builder::new()
-        .format(|buf, record| {
-            writeln!(
-                buf,
-                "{} [{}] - {}",
-                Local::now().format("%Y-%m-%dT%H:%M:%S"),
+    let mut log_file = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open("hiko.log")
+        .expect("[fatal] Failed to open/create log file");
+
+    writeln!(&mut log_file).expect("[fatal] Unable to write log file");
+
+    Dispatch::new()
+        .format(|out, message, record| {
+            out.finish(format_args!(
+                "[{} {}] {}",
+                Local::now().format("%Y-%m-%d %H:%M:%S"),
                 record.level(),
-                record.args()
-            )
+                message
+            ))
         })
-        .init();
+        .level(LevelFilter::Info)
+        .chain(stdout())
+        .chain(log_file)
+        .apply()
+        .unwrap();
 }

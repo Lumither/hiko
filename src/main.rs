@@ -1,19 +1,26 @@
-use axum::response::Html;
-use axum::{routing::get, Router};
+use clap::{arg, Parser};
 
-use hiko::log;
+use hiko::{log, run};
+
+/// a simple service watchdog
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Args {
+    /// path of config file
+    #[arg(short, long, default_value = "./Config.toml")]
+    conf_path: String,
+}
 
 #[tokio::main]
 async fn main() {
+    // load config from terminal
+    let args = Args::parse();
+
+    // log init
     log::init();
 
-    let app = Router::new().route("/", get(handler));
-    axum::Server::bind(&"127.0.0.1:3000".parse().unwrap())
-        .serve(app.into_make_service())
-        .await
-        .expect("[Fatal] axum start failed, killed");
-}
+    dbg!(&args.conf_path);
 
-async fn handler() -> Html<&'static str> {
-    Html("<h1>Hello, World!</h1>")
+    // axum
+    run(args.conf_path.to_owned()).await;
 }

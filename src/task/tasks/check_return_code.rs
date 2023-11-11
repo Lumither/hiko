@@ -17,6 +17,7 @@ pub struct CheckReturnCode {
 #[async_trait]
 impl Task for CheckReturnCode {
     async fn exec(&mut self) -> Result<(), String> {
+        // todo: timeout
         match reqwest::get(&self.url).await {
             Ok(response) => {
                 let res_code = response.status().as_u16();
