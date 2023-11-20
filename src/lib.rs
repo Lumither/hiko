@@ -17,7 +17,7 @@ pub async fn run(config_path: String) {
         }
         Err(err) => {
             log::error!("{}", err);
-            panic!()
+            panic!() // todo: better stop
         }
     };
 

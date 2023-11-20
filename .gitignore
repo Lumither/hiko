@@ -17,6 +17,6 @@ Cargo.lock
 .idea
 
 # local debug data
-Config.toml
-data.db
-./hiko.log
+/Config.toml
+/data.db
+/hiko.log

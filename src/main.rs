@@ -6,7 +6,7 @@ use hiko::{log, run};
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
-    /// path of config file
+    /// Path of config file
     #[arg(short, long, default_value = "./Config.toml")]
     conf_path: String,
 }
