@@ -1,5 +1,8 @@
+use std::process::exit;
+
 use clap::{arg, Parser};
 
+use hiko::config::Config;
 use hiko::{log, run};
 
 /// a simple service watchdog
@@ -18,8 +21,18 @@ async fn main() {
 
     // log init
     log::init();
-
     dbg!(&args.conf_path);
+
+    // load conf
+    let cfg = match Config::from(&args.conf_path) {
+        Ok(cfg) => cfg,
+        Err(err) => {
+            log::error!("{}", err);
+            exit(1);
+        }
+    };
+
+    // load mail module
 
     // axum
     run(args.conf_path.to_owned()).await;

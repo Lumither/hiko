@@ -1,9 +1,12 @@
+use std::process::exit;
+
 use crate::config::Config;
 
 mod api;
 pub mod config;
 mod database;
 pub mod log;
+mod mail;
 mod plugin;
 mod task;
 
@@ -17,7 +20,7 @@ pub async fn run(config_path: String) {
         }
         Err(err) => {
             log::error!("{}", err);
-            panic!() // todo: better stop
+            exit(1);
         }
     };
 

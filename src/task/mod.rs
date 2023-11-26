@@ -16,3 +16,5 @@ pub struct Description {
     name: String,
     text: String,
 }
+
+// todo: new error trait, impl error

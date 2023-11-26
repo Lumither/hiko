@@ -14,6 +14,7 @@ pub struct Config {
 #[derive(Debug)]
 pub struct Mail {
     pub address: String,
+    pub smtp_server: String,
     pub password: String,
 }
 
@@ -21,6 +22,8 @@ pub struct Mail {
 pub struct Task {
     pub timeout: u64,
 }
+
+// todo: new error enum type
 
 impl Config {
     pub fn from(config_path: &str) -> Result<Config, String> {
@@ -71,10 +74,20 @@ impl Config {
                         return Err("missing field `Mail::password`".to_string());
                     }
                 };
-                Some(Mail { address, password })
+                let smtp_server = match mail.get("smtp_server") {
+                    Some(smtp_server) => smtp_server.as_str().to_owned().unwrap().to_string(),
+                    None => {
+                        return Err("missing field `Mail::smtp_server`".to_string());
+                    }
+                };
+                Some(Mail {
+                    address,
+                    password,
+                    smtp_server,
+                })
             }
             None => {
-                log::warn!("mail not config");
+                log::warn!("Mail not config");
                 None
             }
         };

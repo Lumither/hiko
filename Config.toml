@@ -7,3 +7,4 @@ timeout = 5000
 [Mail]
 address = ""
 password = ""
+smtp_server = ""
