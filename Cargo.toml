@@ -4,24 +4,23 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-lettre = "0.11.1"
-serde = { version = "1.0.188", features = ["derive"] }
-serde_json = "1.0.105"
-clap = { version = "4.4.7", features = ["derive"] }
+lettre = "0.11.2"
+serde = { version = "1.0.193", features = ["derive"] }
+serde_json = "1.0.108"
+clap = { version = "4.4.10", features = ["derive"] }
 
-tokio = { version = "1.32.0", features = ["full"] }
-toml = "0.8.2"
-uuid = { version = "1.4.1", features = ["v4", "fast-rng"] }
-axum = "0.6.20"
-surrealdb = { version = "1.0.0", features = ["kv-rocksdb"] }
+tokio = { version = "1.34.0", features = ["full"] }
+toml = "0.8.8"
+uuid = { version = "1.6.1", features = ["v4", "fast-rng", "serde"] }
+axum = "0.7.1"
 async-trait = "0.1.74"
 reqwest = "0.11.22"
 
 # logger
-simple_logger = "4.2.0"
+simple_logger = "4.3.0"
 chrono = { version = "0.4.31", features = [] }
 log = { version = "0.4.20", features = [] }
 fern = { version = "0.6.2" }
 
 # test
-tempfile = "3.8.0"
+tempfile = "3.8.1"

@@ -3,10 +3,12 @@ use axum::{routing::get, Router};
 
 pub async fn run() {
     let app = Router::new().route("/", get(handler));
-    axum::Server::bind(&"127.0.0.1:3000".parse().unwrap())
-        .serve(app.into_make_service())
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000")
         .await
-        .expect("[Fatal] axum start failed, killed");
+        .expect("[fatal] tcp listener init failed");
+    axum::serve(listener, app)
+        .await
+        .expect("[fatal] server failed to start");
 }
 
 async fn handler() -> Html<&'static str> {
