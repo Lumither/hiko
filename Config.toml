@@ -1,5 +1,10 @@
+[general]
+port = 3000
+
 [Database]
-db_path = "data.db"
+url = ""
+user = ""
+password = ""
 
 [Task]
 timeout = 5000

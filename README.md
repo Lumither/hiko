@@ -6,11 +6,11 @@ A simple service watchdog written in Rust
 
 **Warning: The project is in active development currently and will be unstable. The APIs could be changed without prior notice.**
 
-Currently the project is using axum for request handling, Next.js for frontend WebUI.
+Currently, the project is using axum for request handling, Next.js for frontend WebUI.
 
-**Rebuilding Document**
+**Rebuilding Document...**
 
-**v1.0 will be release soon!**
+**v0.1.0 will be released soon!**
 
 ## Deployment
 

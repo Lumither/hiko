@@ -1,121 +1,101 @@
+use crate::config::database::Database;
+use crate::config::mail::Mail;
+use crate::config::task::Task;
+use crate::config::ConfigError::{FileNotFound, InvalidFile};
+use std::error::Error;
+use std::fmt::{Debug, Display, Formatter};
 use std::fs;
-
 use toml::Value;
 
-mod test_config;
+mod database;
+mod mail;
+mod task;
+mod tests;
 
 #[derive(Debug)]
 pub struct Config {
-    pub db_path: String,
+    pub database: Database,
     pub task: Option<Task>,
     pub mail: Option<Mail>,
 }
 
-#[derive(Debug)]
-pub struct Mail {
-    pub address: String,
-    pub smtp_server: String,
-    pub password: String,
+pub enum ConfigError {
+    MissingConfig(String),
+    MissingField(String),
+    InvalidFile(String),
+    InvalidField(String),
+    FileNotFound(String),
 }
 
-#[derive(Debug, PartialEq)]
-pub struct Task {
-    pub timeout: u64,
+impl Debug for ConfigError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ConfigError::MissingConfig(desc) => write!(f, "Missing configuration: {}", desc),
+            ConfigError::MissingField(desc) => write!(f, "Missing field: {}", desc),
+            ConfigError::InvalidFile(desc) => write!(f, "Invalid file: {}", desc),
+            ConfigError::InvalidField(desc) => write!(f, "Invalid field: {}", desc),
+            ConfigError::FileNotFound(desc) => write!(f, "File not found: {}", desc),
+        }
+    }
 }
 
-// todo: new error enum type
+impl Display for ConfigError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Missing configuration: {:?}", &self) // Debug::fmt
+    }
+}
+
+impl Error for ConfigError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        None
+    }
+}
+
+trait ConfigComponent {
+    type ConfigType;
+    fn parse(config_file: Value) -> Result<Self::ConfigType, ConfigError>;
+}
 
 impl Config {
-    pub fn from(config_path: &str) -> Result<Config, String> {
+    pub fn from(config_path: &str) -> Result<Config, ConfigError> {
         let config_file = read_toml(config_path)?;
 
+        // General
+        // todo: General
+
         // Database
-        let database = match config_file.get("Database") {
-            None => return Err("`Database` not found in config file".to_string()),
-            Some(database) => database,
-        };
-        let db_path = match database.get("db_path") {
-            None => return Err("missing filed `Database::db_path`".to_string()),
-            Some(db_path) => db_path.as_str().to_owned().unwrap().to_string(),
-        };
+        let database = Database::parse(config_file.clone())?;
 
         // Task
-        let task = match config_file.get("Task") {
-            Some(task) => {
-                let timeout = match task.get("timeout") {
-                    Some(timeout) => {
-                        if let Ok(timeout) = timeout.to_string().parse::<u64>() {
-                            timeout
-                        } else {
-                            return Err("failed to parse `Task::timeout`".to_string());
-                        }
-                    }
-                    None => {
-                        return Err("missing field `Task::timeout` (type u64 required)".to_string());
-                    }
-                };
-                Some(Task { timeout })
-            }
-            None => None,
-        };
+        let task = Task::parse(config_file.clone())?;
 
         // Mail
-        let mail = match config_file.get("Mail") {
-            Some(mail) => {
-                let address = match mail.get("address") {
-                    Some(address) => address.as_str().to_owned().unwrap().to_string(),
-                    None => {
-                        return Err("missing field `Mail::address`".to_string());
-                    }
-                };
-                let password = match mail.get("password") {
-                    Some(password) => password.as_str().to_owned().unwrap().to_string(),
-                    None => {
-                        return Err("missing field `Mail::password`".to_string());
-                    }
-                };
-                let smtp_server = match mail.get("smtp_server") {
-                    Some(smtp_server) => smtp_server.as_str().to_owned().unwrap().to_string(),
-                    None => {
-                        return Err("missing field `Mail::smtp_server`".to_string());
-                    }
-                };
-                Some(Mail {
-                    address,
-                    password,
-                    smtp_server,
-                })
-            }
-            None => {
-                log::warn!("Mail not config");
-                None
-            }
-        };
+        let mail = Mail::parse(config_file.clone())?;
 
         Ok(Config {
-            db_path,
+            database,
             task,
             mail,
         })
     }
 }
 
-fn read_toml(file_path: &str) -> Result<Value, String> {
+fn read_toml(file_path: &str) -> Result<Value, ConfigError> {
     if let Ok(file_contents) = fs::read_to_string(file_path) {
         if let Ok(toml_value) = toml::from_str(&file_contents) {
             Ok(toml_value)
         } else {
-            Err("failed to parse config file".to_string())
+            Err(InvalidFile(file_path.to_string()))
         }
     } else {
-        // todo: creat template conf file
-        Err("Config.toml not found".to_string())
+        // todo: create template conf file
+        Err(FileNotFound(file_path.to_string()))
     }
 }
 
 #[cfg(test)]
 #[test]
 fn read_config() {
-    let cfg = Config::from("./Config.toml");
-    print!("{:?}", cfg.unwrap());
+    let cfg = Config::from("./Config.toml").unwrap();
+    print!("{:?}", cfg);
 }
