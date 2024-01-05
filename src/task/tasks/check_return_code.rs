@@ -1,4 +1,3 @@
-use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -14,7 +13,6 @@ pub struct CheckReturnCode {
     code: u16,
 }
 
-#[async_trait]
 impl Task for CheckReturnCode {
     async fn exec(&mut self) -> Result<(), String> {
         // todo: timeout
@@ -40,21 +38,28 @@ impl Task for CheckReturnCode {
 }
 
 #[cfg(test)]
-#[tokio::test]
-async fn test_matching() {
-    assert_eq!(
-        CheckReturnCode {
-            id: Uuid::new_v4(),
-            description: Description {
-                name: "name".to_string(),
-                text: "description".to_string(),
-            },
-            fails: 0,
-            url: "https://example.com/a".to_string(),
-            code: 404,
-        }
-        .exec()
-        .await,
-        Ok(())
-    );
+mod tests {
+    use uuid::Uuid;
+
+    use crate::task::tasks::check_return_code::CheckReturnCode;
+    use crate::task::{Description, Task};
+
+    #[tokio::test]
+    async fn test_matching() {
+        assert_eq!(
+            CheckReturnCode {
+                id: Uuid::new_v4(),
+                description: Description {
+                    name: "name".to_string(),
+                    text: "description".to_string(),
+                },
+                fails: 0,
+                url: "https://example.com/a".to_string(),
+                code: 404,
+            }
+            .exec()
+            .await,
+            Ok(())
+        );
+    }
 }

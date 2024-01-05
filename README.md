@@ -18,9 +18,9 @@ Anyhow, an example version was provided at [frontend](frontend) directory.
 - [x] Task System (update if needed)
 - [x] Log
 - [x] Config Reading (update if needed)
-- [ ] Mail (in progress)
-- [ ] Database
-- [ ] JSON API
+- [x] Mail
+- [ ] Database (in progress)
+- [ ] JSON API (in progress)
 - [ ] Frontend
 - [ ] Documentation
 

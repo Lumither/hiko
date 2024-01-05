@@ -1,15 +1,19 @@
+use std::error::Error;
+use std::fmt::{Debug, Display, Formatter};
+use std::fs;
+
+use toml::Value;
+
 use crate::config::database::Database;
 use crate::config::mail::Mail;
 use crate::config::task::Task;
 use crate::config::ConfigError::{FileNotFound, InvalidFile};
-use std::error::Error;
-use std::fmt::{Debug, Display, Formatter};
-use std::fs;
-use toml::Value;
 
 mod database;
-mod mail;
+pub(crate) mod mail;
 mod task;
+
+#[cfg(test)]
 mod tests;
 
 #[derive(Debug)]
@@ -51,7 +55,7 @@ impl Error for ConfigError {
     }
 }
 
-trait ConfigComponent {
+pub trait ConfigComponent {
     type ConfigType;
     fn parse(config_file: Value) -> Result<Self::ConfigType, ConfigError>;
 }
@@ -80,7 +84,7 @@ impl Config {
     }
 }
 
-fn read_toml(file_path: &str) -> Result<Value, ConfigError> {
+pub fn read_toml(file_path: &str) -> Result<Value, ConfigError> {
     if let Ok(file_contents) = fs::read_to_string(file_path) {
         if let Ok(toml_value) = toml::from_str(&file_contents) {
             Ok(toml_value)

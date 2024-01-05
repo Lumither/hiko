@@ -10,6 +10,8 @@ password = ""
 timeout = 5000
 
 [Mail]
-address = ""
-password = ""
+smtp_username = ""
+smtp_password = ""
 smtp_server = ""
+smtp_port = 0
+target_email = ""

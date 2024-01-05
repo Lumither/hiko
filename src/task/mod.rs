@@ -1,9 +1,7 @@
-use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 
 mod tasks;
 
-#[async_trait]
 pub trait Task {
     // do the task
     async fn exec(&mut self) -> Result<(), String>;
