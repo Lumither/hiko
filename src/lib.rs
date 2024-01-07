@@ -13,7 +13,7 @@ mod task;
 pub async fn run(config_path: String) {
     // load conf file
     log::info!("Loading config file");
-    let _config = match Config::from(&config_path) {
+    let config = match Config::from(&config_path) {
         Ok(conf) => {
             log::info!("Config loaded");
             conf
@@ -24,6 +24,6 @@ pub async fn run(config_path: String) {
         }
     };
 
-    //load axum
-    api::run().await;
+    // load axum
+    api::run(config.general.port).await;
 }

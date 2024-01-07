@@ -1,4 +1,4 @@
-[general]
+[General]
 port = 3000
 
 [Database]

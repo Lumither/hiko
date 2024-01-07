@@ -5,6 +5,7 @@ use std::fs;
 use toml::Value;
 
 use crate::config::database::Database;
+use crate::config::general::General;
 use crate::config::mail::Mail;
 use crate::config::task::Task;
 use crate::config::ConfigError::{FileNotFound, InvalidFile};
@@ -13,11 +14,13 @@ mod database;
 pub(crate) mod mail;
 mod task;
 
+mod general;
 #[cfg(test)]
 mod tests;
 
 #[derive(Debug)]
 pub struct Config {
+    pub general: General,
     pub database: Database,
     pub task: Option<Task>,
     pub mail: Option<Mail>,
@@ -65,7 +68,7 @@ impl Config {
         let config_file = read_toml(config_path)?;
 
         // General
-        // todo: General
+        let general = General::parse(config_file.clone())?;
 
         // Database
         let database = Database::parse(config_file.clone())?;
@@ -77,6 +80,7 @@ impl Config {
         let mail = Mail::parse(config_file.clone())?;
 
         Ok(Config {
+            general,
             database,
             task,
             mail,

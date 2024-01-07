@@ -1,8 +1,7 @@
-use std::process::exit;
+use std::process::Command;
 
 use clap::{arg, Parser};
 
-use hiko::config::Config;
 use hiko::{log, run};
 
 /// a simple service watchdog
@@ -16,6 +15,10 @@ struct Args {
 
 #[tokio::main]
 async fn main() {
+    dbg!({
+        Command::new("pwd").spawn().expect("failed to exec pwd");
+    });
+
     // load config from terminal
     let args = Args::parse();
 
@@ -23,17 +26,5 @@ async fn main() {
     log::init();
     dbg!(&args.conf_path);
 
-    // load conf
-    let cfg = match Config::from(&args.conf_path) {
-        Ok(cfg) => cfg,
-        Err(err) => {
-            log::error!("{}", err);
-            exit(1);
-        }
-    };
-
-    // load mail module
-
-    // axum
     run(args.conf_path.to_owned()).await;
 }

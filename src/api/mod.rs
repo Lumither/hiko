@@ -1,11 +1,15 @@
-use axum::response::Html;
-use axum::{routing::get, Router};
 use std::process::exit;
 
-pub async fn run() {
+use axum::response::Html;
+use axum::{routing::get, Router};
+
+pub async fn run(port: u16) {
     let app = Router::new().route("/", get(handler));
-    let listener = match tokio::net::TcpListener::bind("0.0.0.0:3000").await {
-        Ok(listener) => listener,
+    let listener = match tokio::net::TcpListener::bind(format!("0.0.0.0:{}", port)).await {
+        Ok(listener) => {
+            log::info!("Server started at port {}", port);
+            listener
+        }
         Err(e) => {
             log::error!("TcpListener init failed: {}", e.to_string());
             exit(1)
@@ -13,7 +17,7 @@ pub async fn run() {
     };
 
     match axum::serve(listener, app).await {
-        Ok(_) => log::info!("Server started"),
+        Ok(_) => (),
         Err(e) => {
             log::error!("{}", e.to_string());
             exit(1)
