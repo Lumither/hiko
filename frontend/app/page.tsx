@@ -1,13 +1,9 @@
-import Overview from "./overview/page";
-import Sidebar from "./sidebar";
+import { Button } from '@nextui-org/button';
 
 export default function Home() {
     return (
         <>
-            <Sidebar>
-                {/* todo: sidebar switch */}
-                <Overview/>
-            </Sidebar>
+            <Button>test</Button>
         </>
-    )
+    );
 }
