@@ -44,7 +44,7 @@ export default function Home() {
 
                 <Divider orientation={ 'vertical' } className={ 'ml-8 mr-8' } />
 
-                <div className={ 'flex-1 mr-8 overflow-auto' }>
+                <div className={ 'flex-1 mr-8 overflow-auto mt-4' }>
 
                     { contentComponents[selectedKey.keys().next().value as string] }
 

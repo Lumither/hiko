@@ -14,6 +14,7 @@ export default function Sidebar(props: Interface) {
             <Card>
                 <CardBody>
                     <Listbox
+                        aria-label={ 'Navigation sidebar' }
                         variant={ 'flat' }
                         selectionMode={ 'single' }
                         disallowEmptySelection
