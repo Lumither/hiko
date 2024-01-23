@@ -3,9 +3,10 @@ use toml::Value;
 use crate::config::ConfigError::MissingConfig;
 use crate::config::{ConfigComponent, ConfigError};
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub struct General {
     pub port: u16,
+    pub log_path: String,
 }
 
 impl ConfigComponent for General {
@@ -28,6 +29,11 @@ impl ConfigComponent for General {
             }
         };
 
-        Ok(General { port })
+        let log_path = match general.get("log_path") {
+            None => "/var/log/hiko.log".to_string(),
+            Some(log_path) => log_path.as_str().to_owned().unwrap().to_string(),
+        };
+
+        Ok(General { port, log_path })
     }
 }

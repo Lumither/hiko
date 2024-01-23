@@ -1,8 +1,9 @@
+use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 
 mod tasks;
 
-pub trait Task {
+pub trait Task: Serialize + DeserializeOwned {
     // do the task
     async fn exec(&mut self) -> Result<(), String>;
 

@@ -18,6 +18,5 @@ Cargo.lock
 
 # local debug data
 /Config.toml
-/data.db
 /hiko.log
 /confidential

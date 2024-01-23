@@ -2,7 +2,7 @@ use std::process::Command;
 
 use clap::{arg, Parser};
 
-use hiko::{log, run};
+use hiko::run;
 
 /// a simple service watchdog
 #[derive(Parser, Debug)]
@@ -21,9 +21,6 @@ async fn main() {
 
     // load config from terminal
     let args = Args::parse();
-
-    // log init
-    log::init();
     dbg!(&args.conf_path);
 
     run(args.conf_path.to_owned()).await;

@@ -24,6 +24,8 @@ pub async fn run(config_path: String) {
         }
     };
 
+    log::init(config.general.log_path.clone());
+
     // load axum
-    api::run(config.general.port).await;
+    api::run(config).await;
 }

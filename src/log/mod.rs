@@ -6,11 +6,11 @@ use fern::Dispatch;
 use log::LevelFilter;
 pub use log::{debug, error, info, trace, warn};
 
-pub fn init() {
+pub fn init(log_path: String) {
     let mut log_file = OpenOptions::new()
         .create(true)
         .append(true)
-        .open("hiko.log")
+        .open(log_path)
         .expect("[fatal] Failed to open/create log file");
 
     writeln!(&mut log_file).expect("[fatal] Unable to write log file");

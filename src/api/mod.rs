@@ -3,18 +3,47 @@ use std::process::exit;
 use axum::response::Html;
 use axum::{routing::get, Router};
 
-pub async fn run(port: u16) {
-    let app = Router::new().route("/", get(handler));
-    let listener = match tokio::net::TcpListener::bind(format!("0.0.0.0:{}", port)).await {
-        Ok(listener) => {
-            log::info!("Server started at port {}", port);
-            listener
-        }
+use crate::config::Config;
+use crate::database::tasks;
+
+pub async fn run(config: Config) {
+    // task tracking
+    let task_db = match tasks::connect(
+        config.database.url,
+        config.database.user,
+        config.database.password,
+    )
+    .await
+    {
+        Ok(task_db) => task_db,
         Err(e) => {
-            log::error!("TcpListener init failed: {}", e.to_string());
+            log::error!("Tasks database init failed: {}", e.to_string());
             exit(1)
         }
     };
+    match task_db.init().await {
+        Ok(_) => {
+            log::info!("Tasks database initialized")
+        }
+        Err(e) => {
+            log::error!("{}", e);
+            exit(1)
+        }
+    }
+
+    // api
+    let app = Router::new().route("/", get(handler));
+    let listener =
+        match tokio::net::TcpListener::bind(format!("0.0.0.0:{}", config.general.port)).await {
+            Ok(listener) => {
+                log::info!("Server started at port {}", config.general.port);
+                listener
+            }
+            Err(e) => {
+                log::error!("TcpListener init failed: {}", e.to_string());
+                exit(1)
+            }
+        };
 
     match axum::serve(listener, app).await {
         Ok(_) => (),
