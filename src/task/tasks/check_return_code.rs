@@ -1,16 +1,38 @@
+use std::fmt::{Debug, Formatter};
+use std::ops::Deref;
+
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::task::{Description, Task};
 
+#[derive(Clone, Serialize, Deserialize)]
+pub struct Args {
+    pub url: String,
+    pub code: u16,
+}
+
+impl Debug for Args {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", serde_json::to_string(&self).unwrap())
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CheckReturnCode {
-    id: Uuid,
-    description: Description,
-    fails: u32,
+    pub id: Uuid,
+    pub description: Description,
+    pub fails: u32,
 
-    url: String,
-    code: u16,
+    pub args: Args,
+}
+
+impl Deref for CheckReturnCode {
+    type Target = Args;
+
+    fn deref(&self) -> &Self::Target {
+        &self.args
+    }
 }
 
 impl Task for CheckReturnCode {
@@ -41,7 +63,7 @@ impl Task for CheckReturnCode {
 mod tests {
     use uuid::Uuid;
 
-    use crate::task::tasks::check_return_code::CheckReturnCode;
+    use crate::task::tasks::check_return_code::{Args, CheckReturnCode};
     use crate::task::{Description, Task};
 
     #[tokio::test]
@@ -54,8 +76,10 @@ mod tests {
                     text: "description".to_string(),
                 },
                 fails: 0,
-                url: "https://example.com/a".to_string(),
-                code: 404,
+                args: Args {
+                    url: "https://example.com/a".to_string(),
+                    code: 404,
+                },
             }
             .exec()
             .await,

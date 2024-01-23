@@ -1,16 +1,38 @@
+use std::fmt::{Debug, Formatter};
+use std::ops::Deref;
+
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::task::{Description, Task};
 
+#[derive(Clone, Serialize, Deserialize, PartialEq)]
+pub struct Args {
+    pub url: String,
+    pub content: String,
+}
+
+impl Debug for Args {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", serde_json::to_string(&self).unwrap())
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MatchUrlContent {
-    id: Uuid,
-    description: Description,
-    fails: u32,
+    pub id: Uuid,
+    pub description: Description,
+    pub fails: u32,
 
-    url: String,
-    content: String,
+    pub args: Args,
+}
+
+impl Deref for MatchUrlContent {
+    type Target = Args;
+
+    fn deref(&self) -> &Self::Target {
+        &self.args
+    }
 }
 
 impl Task for MatchUrlContent {
@@ -49,7 +71,7 @@ impl Task for MatchUrlContent {
 mod tests {
     use uuid::Uuid;
 
-    use crate::task::tasks::match_url_content::MatchUrlContent;
+    use crate::task::tasks::match_url_content::{Args, MatchUrlContent};
     use crate::task::{Description, Task};
 
     #[test]
@@ -63,8 +85,11 @@ mod tests {
                     text: "description".to_string(),
                 },
                 fails: 0,
-                url: "".to_string(),
-                content: "".to_string(),
+
+                args: Args {
+                    url: "".to_string(),
+                    content: "".to_string(),
+                },
             })
             .unwrap()
         );
@@ -80,8 +105,10 @@ mod tests {
                     text: "description".to_string(),
                 },
                 fails: 0,
-                url: "https://example.com".to_string(),
-                content: "example".to_string(),
+                args: Args {
+                    url: "https://example.com".to_string(),
+                    content: "example".to_string(),
+                },
             }
             .exec()
             .await,
@@ -99,8 +126,10 @@ mod tests {
                     text: "description".to_string(),
                 },
                 fails: 0,
-                url: "https://example.com".to_string(),
-                content: "lol".to_string(),
+                args: Args {
+                    url: "https://example.com".to_string(),
+                    content: "lol".to_string(),
+                },
             }
             .exec()
             .await,

@@ -4,6 +4,8 @@ use std::process::exit;
 
 use sqlx::{query, MySqlPool};
 
+use crate::database::Database;
+
 pub struct TaskDB {
     handler: MySqlPool,
 }
@@ -16,29 +18,60 @@ impl Deref for TaskDB {
     }
 }
 
-pub async fn connect(url: String, usr: String, passwd: String) -> Result<TaskDB, Box<dyn Error>> {
-    dbg!(format!("mysql://{}:{}@{}", usr, passwd, url));
+impl Database for TaskDB {
+    type Database = TaskDB;
+    async fn connect(
+        url: String,
+        usr: String,
+        passwd: String,
+    ) -> Result<Self::Database, Box<dyn Error>> {
+        dbg!(format!("mysql://{}:{}@{}", usr, passwd, url));
 
-    let conn =
-        match MySqlPool::connect(format!("mysql://{}:{}@{}", usr, passwd, url).as_str()).await {
+        let conn = match MySqlPool::connect(format!("mysql://{}:{}@{}", usr, passwd, url).as_str())
+            .await
+        {
             Ok(conn) => conn,
             Err(e) => {
                 log::error!("{}", e);
                 exit(1)
             }
         };
-    Ok(TaskDB { handler: conn })
-}
+        Ok(TaskDB { handler: conn })
+    }
 
-impl TaskDB {
-    pub async fn init(&self) -> Result<(), Box<dyn Error>> {
+    async fn init(&self) -> Result<(), Box<dyn Error>> {
         query(
             r#"
             create table if not exists tasks (
-                id int
+                id varchar(36),
+                description json,
+                fails int default 0,
+                args json
             );
         "#,
         )
+        .execute(&**self)
+        .await?;
+        Ok(())
+    }
+
+    async fn insert(&self, data: serde_json::Value) -> Result<(), Box<dyn Error>> {
+        let uuid = data["id"].clone().to_owned();
+        let description = data["description"].to_string();
+        let fails = match data["fails"].clone().as_i64() {
+            None => 0u32,
+            Some(cnt) => cnt as u32,
+        };
+        let args = data["args"].to_string();
+        query(
+            r#"insert into tasks value 
+                (?, ?, ?, ?);
+            "#,
+        )
+        .bind(uuid.as_str())
+        .bind(description)
+        .bind(fails)
+        .bind(args)
         .execute(&**self)
         .await?;
         Ok(())
@@ -49,17 +82,48 @@ impl TaskDB {
 mod tests {
     use std::error::Error;
 
-    use crate::database::tasks;
+    use uuid::Uuid;
+
+    use crate::database::{tasks::TaskDB, Database};
+    use crate::task::tasks::match_url_content::{Args, MatchUrlContent};
+    use crate::task::Description;
 
     #[tokio::test]
     async fn test_connect() -> Result<(), Box<dyn Error>> {
-        let db = tasks::connect(
+        let db = TaskDB::connect(
             "localhost/test".to_string(),
             "test".to_string(),
             "test".to_string(),
         )
         .await?;
         db.init().await?;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_insert() -> Result<(), Box<dyn Error>> {
+        let db = TaskDB::connect(
+            "localhost/test".to_string(),
+            "test".to_string(),
+            "test".to_string(),
+        )
+        .await?;
+        db.init().await?;
+
+        let task = MatchUrlContent {
+            id: Uuid::new_v4(),
+            description: Description {
+                name: "name".to_string(),
+                text: "description".to_string(),
+            },
+            fails: 0,
+            args: Args {
+                url: "".to_string(),
+                content: "".to_string(),
+            },
+        };
+        dbg!(task.clone());
+        db.insert(serde_json::to_value(task).unwrap()).await?;
         Ok(())
     }
 }

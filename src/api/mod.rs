@@ -4,11 +4,12 @@ use axum::response::Html;
 use axum::{routing::get, Router};
 
 use crate::config::Config;
-use crate::database::tasks;
+use crate::database::tasks::TaskDB;
+use crate::database::Database;
 
 pub async fn run(config: Config) {
     // task tracking
-    let task_db = match tasks::connect(
+    let task_db = match TaskDB::connect(
         config.database.url,
         config.database.user,
         config.database.password,
@@ -32,7 +33,9 @@ pub async fn run(config: Config) {
     }
 
     // api
-    let app = Router::new().route("/", get(handler));
+    let app = Router::new()
+        .route("/", get(handler))
+        .route("/api", get(create));
     let listener =
         match tokio::net::TcpListener::bind(format!("0.0.0.0:{}", config.general.port)).await {
             Ok(listener) => {
@@ -56,4 +59,8 @@ pub async fn run(config: Config) {
 
 async fn handler() -> Html<&'static str> {
     Html("<h1>Hello, World!</h1>")
+}
+
+async fn create() -> Html<&'static str> {
+    Html("<h1> Created </h1>")
 }
