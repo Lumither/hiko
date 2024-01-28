@@ -44,7 +44,9 @@ impl Database for TaskDB {
             r#"
             create table if not exists tasks (
                 id varchar(36),
-                description json,
+                task_type varchar(40),
+                name varchar(40),
+                description varchar(200),
                 fails int default 0,
                 args json
             );
@@ -55,6 +57,7 @@ impl Database for TaskDB {
         Ok(())
     }
 
+    // todo: update
     async fn insert(&self, data: serde_json::Value) -> Result<(), Box<dyn Error>> {
         let uuid = data["id"].clone().to_owned();
         let description = data["description"].to_string();
@@ -112,11 +115,10 @@ mod tests {
 
         let task = MatchUrlContent {
             id: Uuid::new_v4(),
-            description: Description {
+            description: Some(Description {
                 name: "name".to_string(),
                 text: "description".to_string(),
-            },
-            fails: 0,
+            }),
             args: Args {
                 url: "".to_string(),
                 content: "".to_string(),

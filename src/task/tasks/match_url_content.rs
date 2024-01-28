@@ -1,9 +1,11 @@
+use std::error::Error;
 use std::fmt::{Debug, Formatter};
 use std::ops::Deref;
 
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+use crate::task::TaskError::RuntimeError;
 use crate::task::{Description, Task};
 
 #[derive(Clone, Serialize, Deserialize, PartialEq)]
@@ -21,9 +23,9 @@ impl Debug for Args {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MatchUrlContent {
     pub id: Uuid,
-    pub description: Description,
-    pub fails: u32,
-
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(flatten)]
+    pub description: Option<Description>,
     pub args: Args,
 }
 
@@ -36,104 +38,98 @@ impl Deref for MatchUrlContent {
 }
 
 impl Task for MatchUrlContent {
-    async fn exec(&mut self) -> Result<(), String> {
+    async fn exec(&mut self) -> Result<(), Box<dyn Error>> {
         // todo: timeout
         match reqwest::get(&self.url).await {
             Ok(response) => {
-                let res_content = response.text().await;
-                if let Ok(res_content) = res_content {
-                    if res_content.contains(&self.content) {
-                        Ok(())
-                    } else {
-                        Err(format!(
-                            "Content Mismatch: \n\texpected \"{}\", found \"{}\"", // todo: modify style
-                            &self.content, res_content
-                        ))
-                    }
+                let res_content = response.text().await?;
+                if res_content.contains(&self.content) {
+                    Ok(())
                 } else {
-                    self.fails += 1;
-                    Err(res_content.unwrap_err().to_string())
+                    Err(Box::new(RuntimeError(
+                        format!(
+                            "Content Mismatch: {} ({} expected)",
+                            res_content, &self.content
+                        )
+                        .to_string(),
+                    )))
                 }
             }
-            Err(err) => {
-                self.fails += 1;
-                Err(err.to_string())
-            }
+            Err(err) => Err(Box::new(RuntimeError(err.to_string()))),
         }
-    }
-
-    fn fail_count(&self) -> u32 {
-        self.fails
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use std::error::Error;
+
     use uuid::Uuid;
 
     use crate::task::tasks::match_url_content::{Args, MatchUrlContent};
     use crate::task::{Description, Task};
 
     #[test]
-    fn test_serialization() {
-        print!(
-            "{}",
-            serde_json::to_string(&MatchUrlContent {
-                id: Uuid::new_v4(),
-                description: Description {
-                    name: "name".to_string(),
-                    text: "description".to_string(),
-                },
-                fails: 0,
+    fn test_serialize() {
+        dbg!(serde_json::to_string(&MatchUrlContent {
+            id: Uuid::new_v4(),
+            description: Some(Description {
+                name: "name".to_string(),
+                text: "text".to_string(),
+            }),
+            args: Args {
+                url: "url".to_string(),
+                content: "content".to_string(),
+            },
+        })
+        .unwrap());
+    }
 
-                args: Args {
-                    url: "".to_string(),
-                    content: "".to_string(),
-                },
-            })
-            .unwrap()
+    #[test]
+    fn test_deserialize() {
+        let task = serde_json::from_str::<MatchUrlContent>(
+            "{\"id\":\"5e07e449-0c61-4e5c-ad5b-97e3f1a563e5\",\"name\":\"name\",\"text\":\"text\",\"args\":{\"url\":\"url\",\"content\":\"content\"}}" 
         );
+        dbg!(task.unwrap());
+
+        let task = serde_json::from_str::<MatchUrlContent>(
+            "{\"id\":\"5e07e449-0c61-4e5c-ad5b-97e3f1a563e5\",\"args\":{\"url\":\"url\",\"content\":\"content\"}}"
+        );
+        dbg!(task.unwrap());
     }
 
     #[tokio::test]
-    async fn test_matching() {
-        assert_eq!(
-            MatchUrlContent {
-                id: Uuid::new_v4(),
-                description: Description {
-                    name: "name".to_string(),
-                    text: "description".to_string(),
-                },
-                fails: 0,
-                args: Args {
-                    url: "https://example.com".to_string(),
-                    content: "example".to_string(),
-                },
-            }
-            .exec()
-            .await,
-            Ok(())
-        );
+    async fn test_matching() -> Result<(), Box<dyn Error>> {
+        MatchUrlContent {
+            id: Uuid::new_v4(),
+            description: Some(Description {
+                name: "name".to_string(),
+                text: "description".to_string(),
+            }),
+            args: Args {
+                url: "https://example.com".to_string(),
+                content: "example".to_string(),
+            },
+        }
+        .exec()
+        .await
     }
 
     #[tokio::test]
     async fn test_not_matching() {
-        assert_ne!(
-            MatchUrlContent {
-                id: Uuid::new_v4(),
-                description: Description {
-                    name: "name".to_string(),
-                    text: "description".to_string(),
-                },
-                fails: 0,
-                args: Args {
-                    url: "https://example.com".to_string(),
-                    content: "lol".to_string(),
-                },
-            }
-            .exec()
-            .await,
-            Ok(())
-        );
+        assert!(MatchUrlContent {
+            id: Uuid::new_v4(),
+            description: Some(Description {
+                name: "name".to_string(),
+                text: "description".to_string(),
+            }),
+            args: Args {
+                url: "https://example.com".to_string(),
+                content: "lol".to_string(),
+            },
+        }
+        .exec()
+        .await
+        .is_err());
     }
 }

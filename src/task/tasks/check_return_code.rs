@@ -1,9 +1,11 @@
+use std::error::Error;
 use std::fmt::{Debug, Formatter};
 use std::ops::Deref;
 
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+use crate::task::TaskError::RuntimeError;
 use crate::task::{Description, Task};
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -21,9 +23,9 @@ impl Debug for Args {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CheckReturnCode {
     pub id: Uuid,
-    pub description: Description,
-    pub fails: u32,
-
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(flatten)]
+    pub description: Option<Description>,
     pub args: Args,
 }
 
@@ -36,7 +38,7 @@ impl Deref for CheckReturnCode {
 }
 
 impl Task for CheckReturnCode {
-    async fn exec(&mut self) -> Result<(), String> {
+    async fn exec(&mut self) -> Result<(), Box<dyn Error>> {
         // todo: timeout
         match reqwest::get(&self.url).await {
             Ok(response) => {
@@ -44,18 +46,14 @@ impl Task for CheckReturnCode {
                 if res_code.eq(&self.code) {
                     Ok(())
                 } else {
-                    Err(format!(
-                        "Code Mismatch: \n\texpected \"{}\", found \"{}\"",
-                        res_code, &self.code
-                    ))
+                    Err(Box::new(RuntimeError(
+                        format!("Code Mismatch: {} ({} expected)", res_code, &self.code)
+                            .to_string(),
+                    )))
                 }
             }
-            Err(err) => Err(err.to_string()),
+            Err(e) => Err(Box::new(e)),
         }
-    }
-
-    fn fail_count(&self) -> u32 {
-        self.fails
     }
 }
 
@@ -68,22 +66,48 @@ mod tests {
 
     #[tokio::test]
     async fn test_matching() {
-        assert_eq!(
-            CheckReturnCode {
-                id: Uuid::new_v4(),
-                description: Description {
-                    name: "name".to_string(),
-                    text: "description".to_string(),
-                },
-                fails: 0,
-                args: Args {
-                    url: "https://example.com/a".to_string(),
-                    code: 404,
-                },
-            }
-            .exec()
-            .await,
-            Ok(())
+        CheckReturnCode {
+            id: Uuid::new_v4(),
+            description: Some(Description {
+                name: "name".to_string(),
+                text: "description".to_string(),
+            }),
+            args: Args {
+                url: "https://example.com/a".to_string(),
+                code: 404,
+            },
+        }
+        .exec()
+        .await
+        .unwrap();
+    }
+
+    #[test]
+    fn test_serialize() {
+        dbg!(serde_json::to_string(&CheckReturnCode {
+            id: Uuid::new_v4(),
+            description: Some(Description {
+                name: "name".to_string(),
+                text: "text".to_string(),
+            }),
+            args: Args {
+                url: "".to_string(),
+                code: 0,
+            },
+        })
+        .unwrap());
+    }
+
+    #[test]
+    fn test_deserialize() {
+        let task = serde_json::from_str::<CheckReturnCode>(
+            "{\"id\":\"b36edac2-c8c7-42cd-acd5-9afe7e7afa35\",\"args\":{\"url\":\"\",\"code\":0}}",
         );
+        dbg!(task.unwrap());
+
+        let task = serde_json::from_str::<CheckReturnCode>(
+            "{\"id\":\"5ab52418-240d-467b-a41e-4ee778fc276c\",\"name\":\"name\",\"text\":\"text\",\"args\":{\"url\":\"\",\"code\":0}}"
+        );
+        dbg!(task.unwrap());
     }
 }

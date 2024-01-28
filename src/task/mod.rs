@@ -1,4 +1,5 @@
-use std::fmt::{Debug, Formatter};
+use std::error::Error;
+use std::fmt::{Debug, Display, Formatter};
 
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
@@ -7,9 +8,7 @@ pub mod tasks;
 
 pub trait Task: Serialize + DeserializeOwned {
     // do the task
-    async fn exec(&mut self) -> Result<(), String>;
-
-    fn fail_count(&self) -> u32;
+    async fn exec(&mut self) -> Result<(), Box<dyn Error>>;
 }
 
 #[derive(Clone, Serialize, Deserialize, PartialEq)]
@@ -24,4 +23,19 @@ impl Debug for Description {
     }
 }
 
-// todo: new error trait, impl error
+#[derive(Debug, Clone, PartialEq)]
+pub enum TaskError {
+    RuntimeError(String),
+}
+
+impl Display for TaskError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match &self {
+            TaskError::RuntimeError(s) => {
+                write!(f, "Runtime Error: {}", s)
+            }
+        }
+    }
+}
+
+impl Error for TaskError {}
