@@ -21,6 +21,7 @@ impl Debug for Args {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(tag = "type")]
 pub struct MatchUrlContent {
     pub id: Uuid,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -88,12 +89,12 @@ mod tests {
     #[test]
     fn test_deserialize() {
         let task = serde_json::from_str::<MatchUrlContent>(
-            "{\"id\":\"5e07e449-0c61-4e5c-ad5b-97e3f1a563e5\",\"name\":\"name\",\"text\":\"text\",\"args\":{\"url\":\"url\",\"content\":\"content\"}}" 
+            "{\"type\":\"MatchUrlContent\",\"id\":\"5e07e449-0c61-4e5c-ad5b-97e3f1a563e5\",\"name\":\"name\",\"text\":\"text\",\"args\":{\"url\":\"url\",\"content\":\"content\"}}" 
         );
         dbg!(task.unwrap());
 
         let task = serde_json::from_str::<MatchUrlContent>(
-            "{\"id\":\"5e07e449-0c61-4e5c-ad5b-97e3f1a563e5\",\"args\":{\"url\":\"url\",\"content\":\"content\"}}"
+            "{\"type\":\"MatchUrlContent\",\"id\":\"5e07e449-0c61-4e5c-ad5b-97e3f1a563e5\",\"args\":{\"url\":\"url\",\"content\":\"content\"}}"
         );
         dbg!(task.unwrap());
     }

@@ -7,7 +7,6 @@ use serde::{Deserialize, Serialize};
 pub mod tasks;
 
 pub trait Task: Serialize + DeserializeOwned {
-    // do the task
     async fn exec(&mut self) -> Result<(), Box<dyn Error>>;
 }
 

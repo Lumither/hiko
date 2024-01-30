@@ -8,7 +8,7 @@ use uuid::Uuid;
 use crate::task::TaskError::RuntimeError;
 use crate::task::{Description, Task};
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, PartialEq)]
 pub struct Args {
     pub url: String,
     pub code: u16,
@@ -20,7 +20,8 @@ impl Debug for Args {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(tag = "type")]
 pub struct CheckReturnCode {
     pub id: Uuid,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -101,12 +102,12 @@ mod tests {
     #[test]
     fn test_deserialize() {
         let task = serde_json::from_str::<CheckReturnCode>(
-            "{\"id\":\"b36edac2-c8c7-42cd-acd5-9afe7e7afa35\",\"args\":{\"url\":\"\",\"code\":0}}",
+            "{\"type\":\"CheckReturnCode\",\"id\":\"b36edac2-c8c7-42cd-acd5-9afe7e7afa35\",\"args\":{\"url\":\"\",\"code\":0}}",
         );
         dbg!(task.unwrap());
 
         let task = serde_json::from_str::<CheckReturnCode>(
-            "{\"id\":\"5ab52418-240d-467b-a41e-4ee778fc276c\",\"name\":\"name\",\"text\":\"text\",\"args\":{\"url\":\"\",\"code\":0}}"
+            "{\"type\":\"CheckReturnCode\",\"id\":\"5ab52418-240d-467b-a41e-4ee778fc276c\",\"name\":\"name\",\"text\":\"text\",\"args\":{\"url\":\"\",\"code\":0}}"
         );
         dbg!(task.unwrap());
     }
