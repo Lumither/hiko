@@ -2,14 +2,15 @@
 
 A simple service watchdog, designed to be lightweight and performant.
 
-**It is now in active development and not yet functional.**
+**It is now in active development and is not yet functional.**
+
+**v0.1.0 will be released soon!**
+
+---
 
 `Hiko` is designed to work in headless mode, users are highly encouraged to build their own control panel using the
 provided api (building documentation) or directly access through web requests.
 Anyhow, an example version was provided at [frontend](frontend) directory.
-
-
-**v0.1.0 will be released soon!**
 
 ## Features
 
@@ -26,13 +27,47 @@ Anyhow, an example version was provided at [frontend](frontend) directory.
 - [ ] Frontend (in progress)
 - [ ] Documentation
 
+## Requirements
+
+- mysql
+- mail account (for notification) [Optional]
+
 ## Deployment
 
-Considering: Docker
+Considering: Docker, native deployment
+
+## Example Configuration
+
+At `/Config.toml` (can be configured)
+
+```toml
+[General]
+port = 3000
+#log_path = ""
+
+[Database]
+url = "localhost/hiko"
+user = "hiko"
+password = "password"
+
+[Task]
+timeout = 5000
+
+[Mail]
+smtp_username = "a@example.com"
+smtp_password = "password"
+smtp_server = "smtp.example.com"
+smtp_port = 587
+target_email = "b@example.coom"
+
+```
+
+---
 
 ## License
 
-This project is licensed under the Mozilla Public License, Version 2.0. A copy of the license can be found in the [LICENSE](LICENSE) file.
+This project is licensed under the Mozilla Public License, Version 2.0. A copy of the license can be found in
+the [LICENSE](LICENSE) file.
 
 ---
 
