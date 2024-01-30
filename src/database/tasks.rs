@@ -44,7 +44,7 @@ impl Database for TaskDB {
             r#"
             create table if not exists tasks (
                 id varchar(36),
-                task_type varchar(40),
+                type varchar(40),
                 name varchar(40),
                 description varchar(200),
                 fails int default 0,
