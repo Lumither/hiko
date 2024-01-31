@@ -42,13 +42,14 @@ impl Database for TaskDB {
     async fn init(&self) -> Result<(), Box<dyn Error>> {
         query(
             r#"
-            create table if not exists tasks (
-                id varchar(36),
-                type varchar(40),
-                name varchar(40),
+            create table if not exists tasks
+            (
+                id          varchar(36),
+                type        varchar(40),
+                name        varchar(40),
                 description varchar(200),
-                fails int default 0,
-                args json
+                fails       int default 0,
+                args        json
             );
         "#,
         )
@@ -60,7 +61,9 @@ impl Database for TaskDB {
     // todo: update
     async fn insert(&self, data: serde_json::Value) -> Result<(), Box<dyn Error>> {
         let uuid = data["id"].clone().to_owned();
-        let description = data["description"].to_string();
+        let task_type = data["type"].clone().to_owned();
+        let name = data["name"].as_str();
+        let description = data["description"].as_str();
         let fails = match data["fails"].clone().as_i64() {
             None => 0u32,
             Some(cnt) => cnt as u32,
@@ -68,10 +71,12 @@ impl Database for TaskDB {
         let args = data["args"].to_string();
         query(
             r#"insert into tasks value 
-                (?, ?, ?, ?);
+                (?, ?, ?, ?, ?, ?);
             "#,
         )
         .bind(uuid.as_str())
+        .bind(task_type.as_str())
+        .bind(name)
         .bind(description)
         .bind(fails)
         .bind(args)
@@ -124,7 +129,6 @@ mod tests {
                 content: "".to_string(),
             },
         };
-        dbg!(task.clone());
         db.insert(serde_json::to_value(task).unwrap()).await?;
         Ok(())
     }
