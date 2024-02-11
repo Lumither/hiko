@@ -2,19 +2,21 @@ use std::error::Error;
 use std::ops::Deref;
 use std::process::exit;
 
+use serde_json::Value;
 use sqlx::{query, MySqlPool};
+use uuid::Uuid;
 
 use crate::database::Database;
 
 pub struct TaskDB {
-    handler: MySqlPool,
+    handle: MySqlPool,
 }
 
 impl Deref for TaskDB {
     type Target = MySqlPool;
 
     fn deref(&self) -> &Self::Target {
-        &self.handler
+        &self.handle
     }
 }
 
@@ -36,7 +38,7 @@ impl Database for TaskDB {
                 exit(1)
             }
         };
-        Ok(TaskDB { handler: conn })
+        Ok(TaskDB { handle: conn })
     }
 
     async fn init(&self) -> Result<(), Box<dyn Error>> {
@@ -62,8 +64,8 @@ impl Database for TaskDB {
     async fn insert(&self, data: serde_json::Value) -> Result<(), Box<dyn Error>> {
         let uuid = data["id"].clone().to_owned();
         let task_type = data["type"].clone().to_owned();
-        let name = data["name"].as_str();
-        let description = data["description"].as_str();
+        let name = data["name"].as_str().unwrap_or("");
+        let description = data["description"].as_str().unwrap_or("");
         let fails = match data["fails"].clone().as_i64() {
             None => 0u32,
             Some(cnt) => cnt as u32,
@@ -84,14 +86,33 @@ impl Database for TaskDB {
         .await?;
         Ok(())
     }
+
+    async fn read(&self, items: Vec<Uuid>) -> Vec<Result<Value, Box<dyn Error>>> {
+        // let _ = items.iter().map(|item| item).collect();
+        todo!()
+    }
+
+    async fn delete(&self, items: Vec<Uuid>) -> Result<(), Box<dyn Error>> {
+        todo!()
+    }
+
+    async fn update(&self, items: Vec<(Uuid, Value)>) -> Result<(), Box<dyn Error>> {
+        todo!()
+    }
+
+    async fn query<'a>(&self, query: &'a str) -> Result<Vec<Value>, Box<dyn Error>> {
+        todo!()
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use std::error::Error;
 
+    use sqlx::{query, Column, Row};
     use uuid::Uuid;
 
+    use crate::database::utils::query_as_json;
     use crate::database::{tasks::TaskDB, Database};
     use crate::task::tasks::match_url_content::{Args, MatchUrlContent};
     use crate::task::Description;
@@ -130,6 +151,20 @@ mod tests {
             },
         };
         db.insert(serde_json::to_value(task).unwrap()).await?;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_select() -> Result<(), Box<dyn Error>> {
+        let db = TaskDB::connect(
+            "localhost/test".to_string(),
+            "test".to_string(),
+            "test".to_string(),
+        )
+        .await?;
+        db.init().await?;
+        let res = query_as_json(&*db, query("select * from tasks")).await;
+        dbg!(res);
         Ok(())
     }
 }
