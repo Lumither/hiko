@@ -28,12 +28,6 @@ impl Display for ParseError {
 
 impl Error for ParseError {}
 
-#[derive(Copy, Clone)]
-pub enum Either<L, R> {
-    Left(L),
-    Right(R),
-}
-
 pub async fn query_as_json<'a>(
     handle: &sqlx_core::pool::Pool<MySql>,
     query: Query<'a, MySql, MySqlArguments>,
@@ -58,7 +52,7 @@ fn row_to_json<'a>(row: &'a MySqlRow) -> Result<Value, Box<dyn Error>> {
             "JSON" => json!(row.try_get::<Value, _>(ord)?),
             type_name => {
                 return Err(Box::new(UnexpectedType(type_name.to_string())));
-            }
+            } // todo: add more type parse
         };
         result.insert(col.name(), tmp_value);
     }

@@ -3,9 +3,11 @@ use std::ops::Deref;
 use std::process::exit;
 
 use serde_json::Value;
-use sqlx::{query, MySqlPool};
-use uuid::Uuid;
+use sqlx::mysql::MySqlArguments;
+use sqlx::{query, MySql, MySqlPool};
+use sqlx_core::query::Query;
 
+use crate::database::utils::query_as_json;
 use crate::database::Database;
 
 pub struct TaskDB {
@@ -61,7 +63,7 @@ impl Database for TaskDB {
     }
 
     // todo: update
-    async fn insert(&self, data: serde_json::Value) -> Result<(), Box<dyn Error>> {
+    async fn insert(&self, data: Value) -> Result<(), Box<dyn Error>> {
         let uuid = data["id"].clone().to_owned();
         let task_type = data["type"].clone().to_owned();
         let name = data["name"].as_str().unwrap_or("");
@@ -87,21 +89,11 @@ impl Database for TaskDB {
         Ok(())
     }
 
-    async fn read(&self, items: Vec<Uuid>) -> Vec<Result<Value, Box<dyn Error>>> {
-        // let _ = items.iter().map(|item| item).collect();
-        todo!()
-    }
-
-    async fn delete(&self, items: Vec<Uuid>) -> Result<(), Box<dyn Error>> {
-        todo!()
-    }
-
-    async fn update(&self, items: Vec<(Uuid, Value)>) -> Result<(), Box<dyn Error>> {
-        todo!()
-    }
-
-    async fn query<'a>(&self, query: &'a str) -> Result<Vec<Value>, Box<dyn Error>> {
-        todo!()
+    async fn query<'a>(
+        &self,
+        query: Query<'a, MySql, MySqlArguments>,
+    ) -> Result<Vec<Result<Value, Box<dyn Error>>>, Box<dyn Error>> {
+        query_as_json(self, query).await
     }
 }
 
@@ -109,7 +101,7 @@ impl Database for TaskDB {
 mod tests {
     use std::error::Error;
 
-    use sqlx::{query, Column, Row};
+    use sqlx::query;
     use uuid::Uuid;
 
     use crate::database::utils::query_as_json;
@@ -163,8 +155,8 @@ mod tests {
         )
         .await?;
         db.init().await?;
-        let res = query_as_json(&*db, query("select * from tasks")).await;
-        dbg!(res);
+        let res = query_as_json(&db, query("select * from tasks")).await;
+        dbg!(res).unwrap();
         Ok(())
     }
 }
