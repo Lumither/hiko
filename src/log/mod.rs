@@ -3,8 +3,8 @@ use std::io::{stdout, Write};
 
 use chrono::Local;
 use fern::Dispatch;
-use log::LevelFilter;
 pub use log::{debug, error, info, trace, warn};
+use log::LevelFilter;
 
 pub fn init(log_path: String) {
     let mut log_file = OpenOptions::new()
