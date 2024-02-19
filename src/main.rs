@@ -1,7 +1,9 @@
-use std::process::Command;
+use std::process::{exit, Command};
 
+use clap::ArgAction;
 use clap::{arg, Parser};
 
+use hiko::config::Config;
 use hiko::run;
 
 /// a simple service watchdog
@@ -10,7 +12,11 @@ use hiko::run;
 struct Args {
     /// Path of config file
     #[arg(short, long, default_value = "./Config.toml")]
-    conf_path: String,
+    config_path: String,
+
+    /// Only test config file
+    #[arg(long = "test", short = 't', action = ArgAction::SetTrue)]
+    is_test_config_mod: bool,
 }
 
 #[tokio::main]
@@ -21,7 +27,20 @@ async fn main() {
 
     // load config from terminal
     let args = Args::parse();
-    dbg!(&args.conf_path);
+    dbg!(&args.config_path);
 
-    run(args.conf_path.to_owned()).await;
+    if args.is_test_config_mod {
+        match Config::from(&args.config_path) {
+            Ok(_) => {
+                println!("Test Passed!");
+                exit(0);
+            }
+            Err(err) => {
+                println!("{}", err);
+                exit(1);
+            }
+        };
+    }
+
+    run(args.config_path.to_owned()).await;
 }
