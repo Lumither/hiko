@@ -38,19 +38,19 @@ export default function Home() {
 
             <div className={ 'flex flex-auto overflow-auto' }>
 
+                {/* sidebar controller*/ }
                 <div className={ 'flex-none w-2/12 ml-8 mt-4' }>
                     <Sidebar selectedKey={ selectedKey } setSelectedKey={ setSelectedKey } />
                 </div>
 
                 <Divider orientation={ 'vertical' } className={ 'ml-8 mr-8' } />
 
+                {/* content loader */ }
                 <div className={ 'flex-1 mr-8 overflow-auto mt-4' }>
 
                     { contentComponents[selectedKey.keys().next().value as string] }
 
                 </div>
-
-
             </div>
         </div>
     );

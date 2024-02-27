@@ -9,9 +9,13 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@emotion/react": "^11.11.3",
+    "@emotion/styled": "^11.11.0",
+    "@mui/material": "^5.15.10",
+    "@mui/x-charts": "^6.19.4",
     "@nextui-org/react": "^2.2.9",
     "framer-motion": "^10.17.9",
-    "next": "14.0.4",
+    "next": "latest",
     "react": "^18",
     "react-dom": "^18"
   },
