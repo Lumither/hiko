@@ -1,6 +1,8 @@
 use std::error::Error;
 use std::fmt::{Debug, Formatter};
+use std::future::Future;
 use std::ops::Deref;
+use std::pin::Pin;
 
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -39,25 +41,27 @@ impl Deref for MatchUrlContent {
 }
 
 impl Task for MatchUrlContent {
-    async fn exec(&mut self) -> Result<(), Box<dyn Error>> {
+    fn exec(&mut self) -> Pin<Box<dyn Future<Output = Result<(), Box<dyn Error>>> + Send + '_>> {
         // todo: timeout
-        match reqwest::get(&self.url).await {
-            Ok(response) => {
-                let res_content = response.text().await?;
-                if res_content.contains(&self.content) {
-                    Ok(())
-                } else {
-                    Err(Box::new(RuntimeError(
-                        format!(
-                            "Content Mismatch: {} ({} expected)",
-                            res_content, &self.content
-                        )
-                        .to_string(),
-                    )))
+        Box::pin(async {
+            match reqwest::get(&self.url).await {
+                Ok(response) => {
+                    let res_content = response.text().await?;
+                    if res_content.contains(&self.content) {
+                        Ok(())
+                    } else {
+                        Err(Box::new(RuntimeError(
+                            format!(
+                                "Content Mismatch: {} ({} expected)",
+                                res_content, &self.content
+                            )
+                            .to_string(),
+                        )) as Box<dyn Error>)
+                    }
                 }
+                Err(err) => Err(Box::new(RuntimeError(err.to_string())) as Box<dyn Error>),
             }
-            Err(err) => Err(Box::new(RuntimeError(err.to_string()))),
-        }
+        })
     }
 }
 

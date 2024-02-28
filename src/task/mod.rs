@@ -1,13 +1,14 @@
 use std::error::Error;
 use std::fmt::{Debug, Display, Formatter};
+use std::future::Future;
+use std::pin::Pin;
 
-use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 
 pub mod tasks;
 
-pub trait Task: Serialize + DeserializeOwned {
-    async fn exec(&mut self) -> Result<(), Box<dyn Error>>;
+pub trait Task: Debug {
+    fn exec(&mut self) -> Pin<Box<dyn Future<Output = Result<(), Box<dyn Error>>> + Send + '_>>;
 }
 
 #[derive(Clone, Serialize, Deserialize, PartialEq)]

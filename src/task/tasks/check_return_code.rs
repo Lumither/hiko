@@ -1,6 +1,8 @@
 use std::error::Error;
 use std::fmt::{Debug, Formatter};
+use std::future::Future;
 use std::ops::Deref;
+use std::pin::Pin;
 
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -39,22 +41,19 @@ impl Deref for CheckReturnCode {
 }
 
 impl Task for CheckReturnCode {
-    async fn exec(&mut self) -> Result<(), Box<dyn Error>> {
+    fn exec(&mut self) -> Pin<Box<dyn Future<Output = Result<(), Box<dyn Error>>> + Send + '_>> {
         // todo: timeout
-        match reqwest::get(&self.url).await {
-            Ok(response) => {
-                let res_code = response.status().as_u16();
-                if res_code.eq(&self.code) {
-                    Ok(())
-                } else {
-                    Err(Box::new(RuntimeError(
-                        format!("Code Mismatch: {} ({} expected)", res_code, &self.code)
-                            .to_string(),
-                    )))
-                }
+        Box::pin(async {
+            let response = reqwest::get(&self.url).await?;
+            let res_code = response.status().as_u16();
+            if res_code.eq(&self.code) {
+                Ok(())
+            } else {
+                Err(Box::new(RuntimeError(
+                    format!("Code Mismatch: {} ({} expected)", res_code, &self.code).to_string(),
+                )) as Box<dyn Error>)
             }
-            Err(e) => Err(Box::new(e)),
-        }
+        })
     }
 }
 

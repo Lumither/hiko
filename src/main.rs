@@ -1,4 +1,4 @@
-use std::process::{exit, Command};
+use std::process::exit;
 
 use clap::ArgAction;
 use clap::{arg, Parser};
@@ -14,20 +14,14 @@ struct Args {
     #[arg(short, long, default_value = "./Config.toml")]
     config_path: String,
 
-    /// Only test config file
+    /// Validate config file
     #[arg(long = "test", short = 't', action = ArgAction::SetTrue)]
     is_test_config_mod: bool,
 }
 
 #[tokio::main]
 async fn main() {
-    dbg!({
-        Command::new("pwd").spawn().expect("failed to exec pwd");
-    });
-
-    // load config from terminal
     let args = Args::parse();
-    dbg!(&args.config_path);
 
     if args.is_test_config_mod {
         match Config::from(&args.config_path) {
