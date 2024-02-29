@@ -22,10 +22,10 @@ Anyhow, an example version was provided at [frontend](frontend) directory.
 - [x] Log
 - [x] Config Reading (update if needed)
 - [x] Mail
-- [ ] Database (in progress)
+- [x] Database (update if needed)
 - [ ] JSON API (in progress)
 - [ ] Frontend (in progress)
-- [ ] Documentation
+- [ ] Documentation (in progress)
 
 ## Requirements
 

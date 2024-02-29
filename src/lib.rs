@@ -12,14 +12,14 @@ mod task;
 
 pub async fn run(config_path: String) {
     // load conf file
-    log::info!("Loading config file");
+    println!("Loading config file");
     let config = match Config::from(&config_path) {
         Ok(conf) => {
-            log::info!("Config loaded");
+            println!("Config loaded");
             conf
         }
         Err(err) => {
-            log::error!("{}", err);
+            println!("{}", err);
             exit(1);
         }
     };

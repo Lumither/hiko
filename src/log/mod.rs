@@ -3,15 +3,15 @@ use std::io::{stdout, Write};
 
 use chrono::Local;
 use fern::Dispatch;
-pub use log::{debug, error, info, trace, warn};
 use log::LevelFilter;
+pub use log::{debug, error, info, trace, warn};
 
 pub fn init(log_path: String) {
     let mut log_file = OpenOptions::new()
         .create(true)
         .append(true)
         .open(log_path)
-        .expect("[fatal] Failed to open/create log file");
+        .unwrap_or_else(|e| panic!("[fatal] Failed to open/create log file: {}", e));
 
     writeln!(&mut log_file).expect("[fatal] Unable to write log file");
 

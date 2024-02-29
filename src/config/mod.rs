@@ -48,7 +48,7 @@ impl Debug for ConfigError {
 
 impl Display for ConfigError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Missing configuration: {:?}", &self) // Debug::fmt
+        write!(f, "Configuration Error: {:?}", &self) // Debug::fmt
     }
 }
 
