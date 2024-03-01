@@ -19,11 +19,12 @@ pub async fn run(config_path: String) {
             conf
         }
         Err(err) => {
-            println!("{}", err);
+            eprintln!("{}", err);
             exit(1);
         }
     };
 
+    // log init
     log::init(config.general.log_path.clone());
 
     // load axum

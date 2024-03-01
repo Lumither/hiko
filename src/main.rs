@@ -6,7 +6,7 @@ use clap::{arg, Parser};
 use hiko::config::Config;
 use hiko::run;
 
-/// a simple service watchdog
+/// A simple service watchdog
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
@@ -30,7 +30,7 @@ async fn main() {
                 exit(0);
             }
             Err(err) => {
-                println!("{}", err);
+                eprintln!("{}", err);
                 exit(1);
             }
         };

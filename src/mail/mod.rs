@@ -3,32 +3,41 @@ use std::error::Error;
 use lettre::transport::smtp::authentication::{Credentials, Mechanism};
 use lettre::{Message, SmtpTransport, Transport};
 
-use crate::config;
 use crate::config::mail::Mail;
 
 pub struct Mailer {
-    attrib: Mail,
-    creds: Credentials,
+    attrib: Option<Mail>,
+    creds: Option<Credentials>,
 }
 
 impl Mailer {
-    fn new(mail: config::mail::Mail) -> Self {
-        Mailer {
-            attrib: mail.clone(),
-            creds: Credentials::new(mail.smtp_username, mail.smtp_password),
+    pub fn new(mail: Option<Mail>) -> Self {
+        if let Some(mail) = mail {
+            Mailer {
+                attrib: Some(mail.clone()),
+                creds: Some(Credentials::new(mail.smtp_username, mail.smtp_password)),
+            }
+        } else {
+            Mailer {
+                attrib: None,
+                creds: None,
+            }
         }
     }
 
     async fn send(&self, subject: String, body: String) -> Result<(), Box<dyn Error>> {
-        let transport = SmtpTransport::starttls_relay(&self.attrib.smtp_server)?
-            .credentials(self.creds.clone())
-            .port(self.attrib.smtp_port)
+        if self.attrib.is_none() {
+            return Ok(());
+        }
+        let transport = SmtpTransport::starttls_relay(&self.attrib.as_ref().unwrap().smtp_server)?
+            .credentials(self.creds.clone().unwrap())
+            .port(self.attrib.as_ref().unwrap().smtp_port)
             .authentication(vec![Mechanism::Login])
             .build();
 
         let email = Message::builder()
-            .from(self.attrib.smtp_username.parse()?)
-            .to(self.attrib.target_email.parse()?)
+            .from(self.attrib.as_ref().unwrap().smtp_username.parse()?)
+            .to(self.attrib.as_ref().unwrap().target_email.parse()?)
             .subject(subject)
             .body(body)?;
 
@@ -49,7 +58,7 @@ mod tests {
     async fn test_send_email() -> Result<(), Box<dyn Error>> {
         let config_file = crate::config::read_toml("./confidential/test_mail.toml")?;
 
-        let handler = Mailer::new(Mail::parse(config_file.clone())?.unwrap());
+        let handler = Mailer::new(Mail::parse(config_file.clone())?);
 
         handler
             .send("test subject".to_string(), "test body".to_string())

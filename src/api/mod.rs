@@ -6,9 +6,11 @@ use axum::{routing::get, Router};
 use crate::config::Config;
 use crate::database::tasks::TaskDB;
 use crate::database::Database;
+use crate::mail::Mailer;
 
 pub async fn run(config: Config) {
-    // task tracking
+    // Database init
+    log::info!("Tasks Database loading");
     let task_db = match TaskDB::connect(
         config.database.url,
         config.database.user,
@@ -31,8 +33,14 @@ pub async fn run(config: Config) {
             exit(1)
         }
     }
+    log::info!("Tasks Database loaded");
 
-    // api
+    // load mail module
+    log::info!("Mailer loading");
+    let mail = Mailer::new(config.mail);
+    log::info!("Mailer loaded");
+
+    // api listen
     let app = Router::new()
         .route("/", get(handler))
         .route("/api", get(create));
