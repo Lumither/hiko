@@ -18,7 +18,7 @@ mod general;
 #[cfg(test)]
 mod tests;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Config {
     pub general: General,
     pub database: Database,

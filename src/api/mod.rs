@@ -1,45 +1,13 @@
 use std::process::exit;
+use std::sync::Arc;
 
 use axum::response::Html;
 use axum::{routing::get, Router};
 
 use crate::config::Config;
 use crate::database::tasks::TaskDB;
-use crate::database::Database;
-use crate::mail::Mailer;
 
-pub async fn run(config: Config) {
-    // Database init
-    log::info!("Tasks Database loading");
-    let task_db = match TaskDB::connect(
-        config.database.url,
-        config.database.user,
-        config.database.password,
-    )
-    .await
-    {
-        Ok(task_db) => task_db,
-        Err(e) => {
-            log::error!("Tasks database init failed: {}", e.to_string());
-            exit(1)
-        }
-    };
-    match task_db.init().await {
-        Ok(_) => {
-            log::info!("Tasks database initialized")
-        }
-        Err(e) => {
-            log::error!("{}", e);
-            exit(1)
-        }
-    }
-    log::info!("Tasks Database loaded");
-
-    // load mail module
-    log::info!("Mailer loading");
-    let mail = Mailer::new(config.mail);
-    log::info!("Mailer loaded");
-
+pub async fn run(config: Config, task_db: Arc<TaskDB>) {
     // api listen
     let app = Router::new()
         .route("/", get(handler))
@@ -66,6 +34,7 @@ pub async fn run(config: Config) {
 }
 
 async fn handler() -> Html<&'static str> {
+    println!("connection get");
     Html("<h1>Hello, World!</h1>")
 }
 

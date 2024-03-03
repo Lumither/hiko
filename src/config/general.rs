@@ -7,6 +7,7 @@ use crate::config::{ConfigComponent, ConfigError};
 pub struct General {
     pub port: u16,
     pub log_path: String,
+    pub refresh_rate: u64,
 }
 
 impl ConfigComponent for General {
@@ -34,6 +35,21 @@ impl ConfigComponent for General {
             Some(log_path) => log_path.as_str().to_owned().unwrap().to_string(),
         };
 
-        Ok(General { port, log_path })
+        let refresh_rate = match general.get("refresh_rate") {
+            None => 30,
+            Some(refresh_rate) => {
+                if let Some(rate) = refresh_rate.as_integer() {
+                    rate as u64
+                } else {
+                    30
+                }
+            }
+        };
+
+        Ok(General {
+            port,
+            log_path,
+            refresh_rate,
+        })
     }
 }

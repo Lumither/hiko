@@ -2,7 +2,7 @@ use crate::config::ConfigError::{InvalidFile, MissingField};
 use crate::config::{ConfigComponent, ConfigError};
 use toml::Value;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Task {
     pub timeout: u64,
 }

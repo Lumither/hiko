@@ -2,7 +2,7 @@ use crate::config::ConfigError::{MissingConfig, MissingField};
 use crate::config::{ConfigComponent, ConfigError};
 use toml::Value;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Database {
     pub url: String,
     pub user: String,

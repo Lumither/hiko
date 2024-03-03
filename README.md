@@ -1,4 +1,4 @@
-# Hiko
+jjjjk# Hiko
 
 A simple service watchdog, designed to be lightweight and performant.
 
@@ -10,7 +10,7 @@ A simple service watchdog, designed to be lightweight and performant.
 
 `Hiko` is designed to work in headless mode, users are highly encouraged to build their own control panel using the
 provided api (building documentation) or directly access through web requests.
-Anyhow, an example version was provided at [frontend](frontend) directory.
+Anyhow, an example version was provided at [`./frontend`](frontend) directory.
 
 ## Features
 
@@ -46,7 +46,7 @@ port = 3000
 #log_path = ""
 
 [Database]
-url = "localhost/hiko"
+url = "localhost/hiko" # <addr>/<db_name>
 user = "hiko"
 password = "password"
 

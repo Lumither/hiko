@@ -4,11 +4,14 @@ use std::future::Future;
 use std::pin::Pin;
 
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 pub mod tasks;
 
-pub trait Task: Debug {
-    fn exec(&mut self) -> Pin<Box<dyn Future<Output = Result<(), Box<dyn Error>>> + Send + '_>>;
+pub trait Task: Debug + Send + Sync {
+    fn exec(&self) -> Pin<Box<dyn Future<Output = Result<(), Box<dyn Error>>> + Send + '_>>;
+
+    fn get_id(&self) -> Uuid;
 }
 
 #[derive(Clone, Serialize, Deserialize, PartialEq)]

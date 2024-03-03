@@ -14,27 +14,33 @@ use crate::database::Database;
 use crate::task::tasks::check_return_code::CheckReturnCode;
 use crate::task::tasks::match_url_content::MatchUrlContent;
 use crate::task::Task;
+use crate::utils::Either;
 
 pub struct TaskDB {
     handle: MySqlPool,
 }
 
 impl TaskDB {
-    pub fn decode_json_list(list: Vec<Value>) -> Vec<Option<Box<dyn Task>>> {
+    pub fn decode_json_list(list: Vec<Value>) -> Vec<Result<Box<dyn Task>, Value>> {
         list.into_iter()
-            .map(|task_jason| -> Option<Box<dyn Task>> {
-                match task_jason["type"].as_str()? {
-                    "MatchUrlContent" => Some(Box::new(MatchUrlContent {
-                        id: Uuid::from_str(task_jason["id"].as_str()?).ok()?,
-                        description: None,
-                        args: serde_json::from_value(task_jason["args"].clone()).ok()?,
-                    }) as Box<dyn Task>),
-                    "CheckReturnCode" => Some(Box::new(CheckReturnCode {
-                        id: Uuid::from_str(task_jason["id"].as_str()?).ok()?,
-                        description: None,
-                        args: serde_json::from_value(task_jason["args"].clone()).ok()?,
-                    }) as Box<dyn Task>),
-                    _ => None,
+            .map(|task_jason| -> Result<Box<dyn Task>, Value> {
+                match task_jason["type"].as_str() {
+                    None => Err(task_jason),
+                    Some(task_type) => match task_type {
+                        "MatchUrlContent" => {
+                            match serde_json::from_value::<MatchUrlContent>(task_jason.clone()) {
+                                Ok(task) => Ok(Box::new(task) as Box<dyn Task>),
+                                Err(_) => Err(task_jason),
+                            }
+                        }
+                        "CheckReturnCode" => {
+                            match serde_json::from_value::<CheckReturnCode>(task_jason.clone()) {
+                                Ok(task) => Ok(Box::new(task) as Box<dyn Task>),
+                                Err(_) => Err(task_jason),
+                            }
+                        }
+                        _ => Err(task_jason),
+                    },
                 }
             })
             .collect()
@@ -51,11 +57,7 @@ impl Deref for TaskDB {
 
 impl Database for TaskDB {
     type Database = TaskDB;
-    async fn connect(
-        url: String,
-        usr: String,
-        passwd: String,
-    ) -> Result<Self::Database, Box<dyn Error>> {
+    async fn connect(url: &str, usr: &str, passwd: &str) -> Result<Self::Database, Box<dyn Error>> {
         let conn = match MySqlPool::connect(format!("mysql://{}:{}@{}", usr, passwd, url).as_str())
             .await
         {
@@ -139,31 +141,21 @@ mod tests {
 
     #[tokio::test]
     async fn test_connect() -> Result<(), Box<dyn Error>> {
-        let db = TaskDB::connect(
-            "localhost/test".to_string(),
-            "test".to_string(),
-            "test".to_string(),
-        )
-        .await?;
+        let db = TaskDB::connect("localhost/test", "test", "test").await?;
         db.init().await?;
         Ok(())
     }
 
     #[tokio::test]
     async fn test_insert() -> Result<(), Box<dyn Error>> {
-        let db = TaskDB::connect(
-            "localhost/test".to_string(),
-            "test".to_string(),
-            "test".to_string(),
-        )
-        .await?;
+        let db = TaskDB::connect("localhost/hiko", "hiko", "hiko").await?;
         db.init().await?;
 
         for _ in 0..10 {
             let task_match_url_content = MatchUrlContent {
                 id: Uuid::new_v4(),
                 description: Some(Description {
-                    name: "name".to_string(),
+                    name: "".to_string(),
                     text: "description".to_string(),
                 }),
                 args: match_url_content::Args {
@@ -194,12 +186,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_select() -> Result<(), Box<dyn Error>> {
-        let db = TaskDB::connect(
-            "localhost/test".to_string(),
-            "test".to_string(),
-            "test".to_string(),
-        )
-        .await?;
+        let db = TaskDB::connect("localhost/test", "test", "test").await?;
         db.init().await?;
         let res = query_as_json(&db, query("select * from tasks")).await;
         dbg!(res).unwrap();
@@ -208,12 +195,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_request() -> Result<(), Box<dyn Error>> {
-        let db = TaskDB::connect(
-            "localhost/test".to_string(),
-            "test".to_string(),
-            "test".to_string(),
-        )
-        .await?;
+        let db = TaskDB::connect("localhost/test", "test", "test").await?;
         db.init().await?;
 
         let res = query_as_json(&db, query("select * from tasks")).await?;

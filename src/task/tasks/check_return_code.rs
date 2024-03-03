@@ -41,7 +41,7 @@ impl Deref for CheckReturnCode {
 }
 
 impl Task for CheckReturnCode {
-    fn exec(&mut self) -> Pin<Box<dyn Future<Output = Result<(), Box<dyn Error>>> + Send + '_>> {
+    fn exec(&self) -> Pin<Box<dyn Future<Output = Result<(), Box<dyn Error>>> + Send + '_>> {
         // todo: timeout
         Box::pin(async {
             let response = reqwest::get(&self.url).await?;
@@ -54,6 +54,10 @@ impl Task for CheckReturnCode {
                 )) as Box<dyn Error>)
             }
         })
+    }
+
+    fn get_id(&self) -> Uuid {
+        self.id
     }
 }
 
