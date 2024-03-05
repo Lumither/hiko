@@ -1,20 +1,17 @@
 use std::error::Error;
 use std::ops::Deref;
 use std::process::exit;
-use std::str::FromStr;
 
 use serde_json::Value;
 use sqlx::mysql::MySqlArguments;
 use sqlx::{query, MySql, MySqlPool};
 use sqlx_core::query::Query;
-use uuid::Uuid;
 
 use crate::database::utils::query_as_json;
 use crate::database::Database;
 use crate::task::tasks::check_return_code::CheckReturnCode;
 use crate::task::tasks::match_url_content::MatchUrlContent;
 use crate::task::Task;
-use crate::utils::Either;
 
 pub struct TaskDB {
     handle: MySqlPool,

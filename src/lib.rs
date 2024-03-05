@@ -1,7 +1,5 @@
 use std::process::exit;
 use std::sync::Arc;
-use std::time::Duration;
-use tokio::time::sleep;
 
 use crate::config::Config;
 use crate::database::tasks::TaskDB;

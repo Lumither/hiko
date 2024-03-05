@@ -34,7 +34,6 @@ pub async fn run(config: Config, task_db: Arc<TaskDB>) {
 }
 
 async fn handler() -> Html<&'static str> {
-    println!("connection get");
     Html("<h1>Hello, World!</h1>")
 }
 

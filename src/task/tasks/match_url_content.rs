@@ -59,7 +59,7 @@ impl Task for MatchUrlContent {
                         )) as Box<dyn Error>)
                     }
                 }
-                Err(err) => Err(Box::new(RuntimeError(err.to_string())) as Box<dyn Error>),
+                Err(err) => Err(Box::new(err) as Box<dyn Error>),
             }
         })
     }
