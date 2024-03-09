@@ -49,7 +49,7 @@ fn row_to_json<'a>(row: &'a MySqlRow) -> Result<Value, Box<dyn Error>> {
         let tmp_value = match col_type_ame {
             "VARCHAR" => json!(row.try_get::<String, _>(ord)?),
             "INT" => json!(row.try_get::<i64, _>(ord)?),
-            "JSON" => json!(row.try_get::<Value, _>(ord)?),
+            "JSON" | "TEXT" | "LONGTEXT" => json!(row.try_get::<Value, _>(ord)?),
             type_name => {
                 return Err(Box::new(UnexpectedType(type_name.to_string())));
             } // todo: add more type parse

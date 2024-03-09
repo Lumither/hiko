@@ -60,11 +60,11 @@ pub async fn task_executor(task_db: Arc<TaskDB>) {
             match res {
                 Ok(Ok(_)) => {}
                 Ok(Err(e)) => {
-                    log::warn!("Runtime error on task `{}`: {}", id, e);
+                    log::error!("Error at task `{}`: {}", id, e);
                     add_fails(id, task_db.clone()).await;
                 }
                 Err(e) => {
-                    log::warn!("Panic at executing task `{}`: {}", id, e);
+                    log::error!("Panic at task `{}`: {}", id, e);
                     add_fails(id, task_db.clone()).await;
                 }
             }
