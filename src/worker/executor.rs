@@ -13,7 +13,7 @@ use crate::database::tasks::TaskDB;
 use crate::database::utils::query_as_json;
 use crate::worker::utils::add_fails;
 
-pub async fn task_executor(task_db: Arc<TaskDB>) {
+pub async fn task_executor(task_db: Arc<TaskDB>, task_refresh_rate: u64) {
     loop {
         let res = query_as_json(&task_db, query("select * from tasks"))
             .await
@@ -70,6 +70,6 @@ pub async fn task_executor(task_db: Arc<TaskDB>) {
             }
         }
 
-        sleep(Duration::from_secs(5)).await;
+        sleep(Duration::from_secs(task_refresh_rate)).await;
     }
 }

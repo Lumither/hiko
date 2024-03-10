@@ -1,5 +1,6 @@
 use std::error::Error;
 
+use lettre::message::IntoBody;
 use lettre::transport::smtp::authentication::{Credentials, Mechanism};
 use lettre::{Message, SmtpTransport, Transport};
 
@@ -25,7 +26,15 @@ impl Mailer {
         }
     }
 
-    async fn send(&self, subject: String, body: String) -> Result<(), Box<dyn Error>> {
+    pub async fn send<Subject, Body>(
+        &self,
+        subject: Subject,
+        body: Body,
+    ) -> Result<(), Box<dyn Error>>
+    where
+        Subject: Into<String>,
+        Body: IntoBody,
+    {
         if self.attrib.is_none() {
             return Ok(());
         }
