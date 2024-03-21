@@ -1,13 +1,12 @@
 use std::error::Error;
 use std::ops::Deref;
-use std::process::exit;
 
 use serde_json::Value;
 use sqlx::mysql::MySqlArguments;
 use sqlx::{query, MySql, MySqlPool};
 use sqlx_core::query::Query;
 
-use crate::database::utils::query_as_json;
+use crate::database::utils::{get_db_handler, query_as_json};
 use crate::database::Database;
 use crate::task::tasks::check_return_code::CheckReturnCode;
 use crate::task::tasks::match_url_content::MatchUrlContent;
@@ -42,52 +41,8 @@ impl TaskDB {
             })
             .collect()
     }
-}
 
-impl Deref for TaskDB {
-    type Target = MySqlPool;
-
-    fn deref(&self) -> &Self::Target {
-        &self.handle
-    }
-}
-
-impl Database for TaskDB {
-    type Database = TaskDB;
-    async fn connect(url: &str, usr: &str, passwd: &str) -> Result<Self::Database, Box<dyn Error>> {
-        let conn = match MySqlPool::connect(format!("mysql://{}:{}@{}", usr, passwd, url).as_str())
-            .await
-        {
-            Ok(conn) => conn,
-            Err(e) => {
-                log::error!("{}", e);
-                exit(1)
-            }
-        };
-        Ok(TaskDB { handle: conn })
-    }
-
-    async fn init(&self) -> Result<(), Box<dyn Error>> {
-        query(
-            r#"
-            create table if not exists tasks
-            (
-                id          varchar(36),
-                type        varchar(40),
-                name        varchar(40),
-                description varchar(200),
-                fails       int default 0,
-                args        json
-            );
-        "#,
-        )
-        .execute(&**self)
-        .await?;
-        Ok(())
-    }
-
-    // todo: update
-    async fn insert(&self, data: Value) -> Result<(), Box<dyn Error>> {
+    pub async fn insert(&self, data: Value) -> Result<(), Box<dyn Error>> {
         let uuid = data["id"].clone().to_owned();
         let task_type = data["type"].clone().to_owned();
         let name = data["name"].as_str().unwrap_or("");
@@ -112,6 +67,43 @@ impl Database for TaskDB {
         .await?;
         Ok(())
     }
+}
+
+impl Deref for TaskDB {
+    type Target = MySqlPool;
+
+    fn deref(&self) -> &Self::Target {
+        &self.handle
+    }
+}
+
+impl Database for TaskDB {
+    type Database = TaskDB;
+    async fn connect(url: &str, usr: &str, passwd: &str) -> Result<Self::Database, Box<dyn Error>> {
+        match get_db_handler(url, usr, passwd).await {
+            Ok(conn) => Ok(TaskDB { handle: conn }),
+            Err(e) => Err(e),
+        }
+    }
+
+    async fn init(&self) -> Result<(), Box<dyn Error>> {
+        query(
+            r#"
+            create table if not exists tasks
+            (
+                id          varchar(36),
+                type        varchar(40),
+                name        varchar(40),
+                description varchar(200),
+                fails       int default 0,
+                args        json
+            );
+        "#,
+        )
+        .execute(&**self)
+        .await?;
+        Ok(())
+    }
 
     async fn query<'a>(
         &self,
@@ -125,6 +117,7 @@ impl Database for TaskDB {
 mod tests {
     use std::error::Error;
 
+    use crate::config::Config;
     use serde_json::Value;
     use sqlx::query;
     use uuid::Uuid;
@@ -183,7 +176,13 @@ mod tests {
 
     #[tokio::test]
     async fn test_select() -> Result<(), Box<dyn Error>> {
-        let db = TaskDB::connect("localhost/test", "test", "test").await?;
+        let config = Config::from("./confidential/config.toml").unwrap();
+        let db = TaskDB::connect(
+            &config.database.url,
+            &config.database.user,
+            &config.database.password,
+        )
+        .await?;
         db.init().await?;
         let res = query_as_json(&db, query("select * from tasks")).await;
         dbg!(res).unwrap();
@@ -192,7 +191,13 @@ mod tests {
 
     #[tokio::test]
     async fn test_request() -> Result<(), Box<dyn Error>> {
-        let db = TaskDB::connect("localhost/test", "test", "test").await?;
+        let config = Config::from("./confidential/config.toml").unwrap();
+        let db = TaskDB::connect(
+            &config.database.url,
+            &config.database.user,
+            &config.database.password,
+        )
+        .await?;
         db.init().await?;
 
         let res = query_as_json(&db, query("select * from tasks")).await?;

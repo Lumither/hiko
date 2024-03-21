@@ -2,6 +2,7 @@ use std::process::exit;
 use std::sync::Arc;
 use std::time::Duration;
 
+use crate::database::record::RecordDB;
 use futures::future::join_all;
 use serde_json::Value;
 use sqlx::query;
@@ -13,7 +14,11 @@ use crate::database::tasks::TaskDB;
 use crate::database::utils::query_as_json;
 use crate::worker::utils::add_fails;
 
-pub async fn task_executor(task_db: Arc<TaskDB>, task_refresh_rate: u64) {
+pub async fn executor(
+    task_db: Arc<TaskDB>,
+    records_database: Arc<RecordDB>,
+    task_refresh_rate: u64,
+) {
     loop {
         let res = query_as_json(&task_db, query("select * from tasks"))
             .await
@@ -61,11 +66,11 @@ pub async fn task_executor(task_db: Arc<TaskDB>, task_refresh_rate: u64) {
                 Ok(Ok(_)) => {}
                 Ok(Err(e)) => {
                     log::error!("Error at task `{}`: {}", id, e);
-                    add_fails(id, task_db.clone()).await;
+                    add_fails(task_db.clone(), records_database.clone(), id, e).await;
                 }
                 Err(e) => {
                     log::error!("Panic at task `{}`: {}", id, e);
-                    add_fails(id, task_db.clone()).await;
+                    add_fails(task_db.clone(), records_database.clone(), id, e.to_string()).await;
                 }
             }
         }

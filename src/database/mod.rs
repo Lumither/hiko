@@ -5,6 +5,7 @@ use sqlx::mysql::MySqlArguments;
 use sqlx::MySql;
 use sqlx_core::query::Query;
 
+pub mod record;
 pub mod tasks;
 pub mod utils;
 
@@ -14,8 +15,6 @@ pub trait Database {
     async fn connect(url: &str, usr: &str, passwd: &str) -> Result<Self::Database, Box<dyn Error>>;
 
     async fn init(&self) -> Result<(), Box<dyn Error>>;
-
-    async fn insert(&self, data: Value) -> Result<(), Box<dyn Error>>;
 
     async fn query<'a>(
         &self,

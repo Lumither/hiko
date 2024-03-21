@@ -1,11 +1,12 @@
 use std::collections::HashMap;
 use std::error::Error;
 use std::fmt::{Debug, Display, Formatter};
+use std::process::exit;
 
 use serde_json::{json, Value};
 use sqlx::mysql::{MySqlArguments, MySqlRow};
 use sqlx::query::Query;
-use sqlx::{MySql, TypeInfo};
+use sqlx::{MySql, MySqlPool, TypeInfo};
 use sqlx_core::column::Column;
 use sqlx_core::row::Row;
 
@@ -57,6 +58,22 @@ fn row_to_json<'a>(row: &'a MySqlRow) -> Result<Value, Box<dyn Error>> {
         result.insert(col.name(), tmp_value);
     }
     Ok(json!(result))
+}
+
+pub async fn get_db_handler(
+    url: &str,
+    usr: &str,
+    passwd: &str,
+) -> Result<MySqlPool, Box<dyn Error>> {
+    let conn =
+        match MySqlPool::connect(format!("mysql://{}:{}@{}", usr, passwd, url).as_str()).await {
+            Ok(conn) => conn,
+            Err(e) => {
+                log::error!("{}", e);
+                exit(1)
+            }
+        };
+    Ok(conn)
 }
 
 #[cfg(test)]
