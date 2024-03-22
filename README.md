@@ -1,4 +1,4 @@
-jjjjk# Hiko
+# Hiko
 
 A simple service watchdog, designed to be lightweight and performant.
 
