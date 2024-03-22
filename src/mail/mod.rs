@@ -6,6 +6,8 @@ use lettre::{Message, SmtpTransport, Transport};
 
 use crate::config::mail::Mail;
 
+pub mod templates;
+
 pub struct Mailer {
     attrib: Option<Mail>,
     creds: Option<Credentials>,

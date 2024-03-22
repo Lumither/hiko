@@ -20,7 +20,7 @@ pub async fn executor(
     task_refresh_rate: u64,
 ) {
     loop {
-        let res = query_as_json(&task_db, query("select * from tasks"))
+        let res = query_as_json(&task_db, query("select `id`, `type`, `args` from tasks"))
             .await
             .unwrap_or_else(|e| {
                 log::error!("{}", e.to_string());
@@ -65,11 +65,11 @@ pub async fn executor(
             match res {
                 Ok(Ok(_)) => {}
                 Ok(Err(e)) => {
-                    log::error!("Error at task `{}`: {}", id, e);
+                    log::warn!("Error at task `{}`: {}", id, e);
                     add_fails(task_db.clone(), records_database.clone(), id, e).await;
                 }
                 Err(e) => {
-                    log::error!("Panic at task `{}`: {}", id, e);
+                    log::warn!("Panic at task `{}`: {}", id, e);
                     add_fails(task_db.clone(), records_database.clone(), id, e.to_string()).await;
                 }
             }

@@ -1,3 +1,4 @@
+use chrono::NaiveDateTime;
 use std::collections::HashMap;
 use std::error::Error;
 use std::fmt::{Debug, Display, Formatter};
@@ -46,11 +47,21 @@ fn row_to_json<'a>(row: &'a MySqlRow) -> Result<Value, Box<dyn Error>> {
     let mut result: HashMap<&'a str, Value> = Default::default();
     for col in row.columns() {
         let ord = col.ordinal();
-        let col_type_ame = col.type_info().name();
-        let tmp_value = match col_type_ame {
-            "VARCHAR" => json!(row.try_get::<String, _>(ord)?),
+        let col_type_name = col.type_info().name();
+        let tmp_value = match col_type_name {
+            "VARCHAR" | "TEXT" => json!(match row.try_get::<Value, _>(ord) {
+                // `json` was not supported in mariadb and will be stored as TEXT, this seg is used to differentiate json and text
+                Ok(value) => {
+                    value
+                }
+                Err(_) => {
+                    json!(row.try_get::<String, _>(ord)?)
+                }
+            }),
             "INT" => json!(row.try_get::<i64, _>(ord)?),
-            "JSON" | "TEXT" | "LONGTEXT" => json!(row.try_get::<Value, _>(ord)?),
+            "BOOLEAN" => json!(row.try_get::<bool, _>(ord)?),
+            "JSON" | "LONGTEXT" => json!(row.try_get::<Value, _>(ord)?),
+            "DATETIME" => json!(row.try_get::<NaiveDateTime, _>(ord)?),
             type_name => {
                 return Err(Box::new(UnexpectedType(type_name.to_string())));
             } // todo: add more type parse
