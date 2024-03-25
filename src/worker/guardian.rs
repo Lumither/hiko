@@ -1,15 +1,16 @@
-use serde_json::Value;
 use std::process::exit;
 use std::sync::Arc;
 use std::time::Duration;
+
+use serde_json::Value;
+use sqlx_core::query::query;
+use tokio::time::sleep;
 
 use crate::database::record::RecordDB;
 use crate::database::tasks::TaskDB;
 use crate::database::Database;
 use crate::mail::templates::records_warn_notification::records_warn_notification;
 use crate::mail::Mailer;
-use sqlx_core::query::query;
-use tokio::time::sleep;
 
 pub async fn guardian(
     tasks_database: Arc<TaskDB>,
@@ -36,20 +37,22 @@ pub async fn guardian(
             .filter_map(|json| json.ok())
             .collect();
 
-        match mailer
-            .send(
-                "[Hiko] Task Error Notification",
-                records_warn_notification(fail_record_json_list),
-            )
-            .await
-        {
-            Ok(_) => {
-                log::info!("Warning mail sent");
-            }
-            Err(e) => {
-                log::error!("Mail sending failed: {}", e);
-            }
-        };
+        if !fail_record_json_list.is_empty() {
+            match mailer
+                .send(
+                    "[Hiko] Task Error Notification",
+                    records_warn_notification(fail_record_json_list),
+                )
+                .await
+            {
+                Ok(_) => {
+                    log::info!("Warning mail sent");
+                }
+                Err(e) => {
+                    log::error!("Mail sending failed: {}", e);
+                }
+            };
+        }
 
         sleep(Duration::from_secs(notification_refresh_rate)).await;
     }
